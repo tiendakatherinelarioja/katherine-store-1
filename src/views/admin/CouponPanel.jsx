@@ -74,7 +74,7 @@ export default function CouponPanel() {
       </div>
 
       {/* Form: Add Coupon */}
-      <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-150 items-end">
+      <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-150 items-end">
         <div>
           <Input
             label="Código de Cupón *"
@@ -82,7 +82,7 @@ export default function CouponPanel() {
             value={newCode}
             onChange={(e) => setNewCode(e.target.value)}
             placeholder="Ej: KATHERINE15"
-            className="w-full text-xs py-2.5 bg-white uppercase font-bold"
+            className="w-full text-xs bg-white uppercase font-bold"
             disabled={loading}
             required
           />
@@ -93,7 +93,7 @@ export default function CouponPanel() {
           <select
             value={newType}
             onChange={(e) => setNewType(e.target.value)}
-            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-zinc-800/20 focus:border-zinc-800 transition-all cursor-pointer text-gray-800 font-semibold h-[38px]"
+            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-800/20 focus:border-zinc-800 transition-all cursor-pointer text-gray-800 font-semibold"
           >
             <option value="porcentaje">Porcentual (%)</option>
             <option value="fijo">Monto Fijo ($)</option>
@@ -108,7 +108,7 @@ export default function CouponPanel() {
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
             placeholder={newType === 'porcentaje' ? 'Ej: 15' : 'Ej: 1500'}
-            className="w-full text-xs py-2.5 bg-white"
+            className="w-full text-xs bg-white"
             disabled={loading}
             required
           />
@@ -116,7 +116,7 @@ export default function CouponPanel() {
 
         <Button
           type="submit"
-          className="gap-1.5 text-xs py-2.5 px-4 rounded-xl h-[38px] justify-center"
+          className="gap-1.5 text-xs py-3 px-4 rounded-2xl justify-center w-full"
           disabled={loading || !newCode.trim() || !newValue}
         >
           <Plus className="w-4 h-4" />
@@ -135,48 +135,50 @@ export default function CouponPanel() {
             No hay cupones registrados.
           </div>
         ) : (
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-gray-200 text-gray-400 font-bold text-xxs uppercase tracking-widest bg-gray-50/80">
-                <th className="p-3.5 pl-4 rounded-l-md">Código</th>
-                <th className="p-3.5">Tipo</th>
-                <th className="p-3.5">Valor</th>
-                <th className="p-3.5">Estado</th>
-                <th className="p-3.5 rounded-r-md text-right pr-4">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {paginatedCoupons.map((coupon) => (
-                <tr key={coupon.id} className="hover:bg-gray-50/40 transition-colors">
-                  <td className="p-3.5 pl-4 font-bold text-gray-900 tracking-wider">
-                    {coupon.codigo}
-                  </td>
-                  <td className="p-3.5">
-                    <Badge variant="neutral">
-                      {coupon.tipo === 'porcentaje' ? 'Porcentual' : 'Fijo'}
-                    </Badge>
-                  </td>
-                  <td className="p-3.5 font-bold text-gray-800">
-                    {coupon.tipo === 'porcentaje' ? `${coupon.valor}%` : `$${parseFloat(coupon.valor).toFixed(2)}`}
-                  </td>
-                  <td className="p-3.5">
-                    <Badge variant={coupon.activo ? 'success' : 'danger'}>
-                      {coupon.activo ? 'Activo' : 'Inactivo'}
-                    </Badge>
-                  </td>
-                  <td className="p-3.5 text-right pr-4">
-                    <button
-                      onClick={() => setDeletingId(coupon.id)}
-                      className="p-1.5 bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-md transition-colors cursor-pointer"
-                      title="Eliminar Cupón"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs min-w-[500px]">
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-400 font-bold text-xxs uppercase tracking-widest bg-gray-50/80">
+                  <th className="p-3.5 pl-4 rounded-l-md">Código</th>
+                  <th className="p-3.5">Tipo</th>
+                  <th className="p-3.5">Valor</th>
+                  <th className="p-3.5">Estado</th>
+                  <th className="p-3.5 rounded-r-md text-right pr-4">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {paginatedCoupons.map((coupon) => (
+                  <tr key={coupon.id} className="hover:bg-gray-50/40 transition-colors">
+                    <td className="p-3.5 pl-4 font-bold text-gray-900 tracking-wider">
+                      {coupon.codigo}
+                    </td>
+                    <td className="p-3.5">
+                      <Badge variant="neutral">
+                        {coupon.tipo === 'porcentaje' ? 'Porcentual' : 'Fijo'}
+                      </Badge>
+                    </td>
+                    <td className="p-3.5 font-bold text-gray-800">
+                      {coupon.tipo === 'porcentaje' ? `${coupon.valor}%` : `$${parseFloat(coupon.valor).toFixed(2)}`}
+                    </td>
+                    <td className="p-3.5">
+                      <Badge variant={coupon.activo ? 'success' : 'danger'}>
+                        {coupon.activo ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </td>
+                    <td className="p-3.5 text-right pr-4">
+                      <button
+                        onClick={() => setDeletingId(coupon.id)}
+                        className="p-1.5 bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-md transition-colors cursor-pointer"
+                        title="Eliminar Cupón"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -96,8 +96,8 @@ export default function CategoryPanel({
       </div>
 
       {/* Row: Add Category Form */}
-      <form onSubmit={handleAdd} className="flex gap-3 mb-6 bg-gray-50/50 p-4 rounded-md border border-gray-150">
-        <div className="flex-1 max-w-sm">
+      <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-3 mb-6 bg-gray-50/50 p-4 rounded-md border border-gray-150">
+        <div className="flex-1 max-w-none sm:max-w-sm">
           <Input
             type="text"
             value={newCatName}
@@ -147,15 +147,16 @@ export default function CategoryPanel({
 
           return (
             <>
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-gray-200 text-gray-400 font-bold text-xxs uppercase tracking-widest bg-gray-50/80">
-                    <th className="p-3.5 pl-4 rounded-l-md">Nombre de Categoría</th>
-                    <th className="p-3.5 text-center">Productos Vinculados</th>
-                    <th className="p-3.5 rounded-r-md text-right pr-4">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs min-w-[500px]">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-gray-400 font-bold text-xxs uppercase tracking-widest bg-gray-50/80">
+                      <th className="p-3.5 pl-4 rounded-l-md">Nombre de Categoría</th>
+                      <th className="p-3.5 text-center">Productos Vinculados</th>
+                      <th className="p-3.5 rounded-r-md text-right pr-4">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
                   {paginatedCategories.map((cat) => {
                     const count = getProductCount(cat.nombre);
                     const isEditing = editingId === cat.id;
@@ -235,6 +236,7 @@ export default function CategoryPanel({
                   })}
                 </tbody>
               </table>
+            </div>
 
               {/* Pagination Controls */}
               {totalPages > 1 && (

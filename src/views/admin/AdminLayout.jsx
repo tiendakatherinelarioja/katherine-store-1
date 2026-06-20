@@ -118,7 +118,7 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="fixed inset-0 w-screen h-screen z-50 bg-gray-100/60 flex font-jakarta overflow-hidden">
+    <div className="fixed inset-0 w-screen h-screen z-50 bg-gray-100/60 flex flex-col md:flex-row font-jakarta overflow-hidden">
       
       {/* Mobile Top Navigation bar */}
       <div className="md:hidden bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 shrink-0">
@@ -332,7 +332,7 @@ export default function AdminLayout({
       )}
 
       {/* Main Content Panels */}
-      <main className="flex-1 overflow-hidden p-6 md:p-8 relative mt-14 md:mt-0 flex flex-col justify-stretch">
+      <main className="flex-1 overflow-hidden p-4 md:p-8 relative flex flex-col justify-stretch">
         {adminTab === 'orders' && <OrdersPanel />}
         {adminTab === 'announcements' && <AnnouncementsPanel />}
         {adminTab === 'coupons' && <CouponPanel />}

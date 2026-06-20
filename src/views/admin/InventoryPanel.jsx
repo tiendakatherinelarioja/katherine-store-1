@@ -149,10 +149,10 @@ export default function InventoryPanel({
   const paginatedProducts = products.slice(startIndex, startIndex + itemsPerPage);
 
   return (
-    <div className="flex h-full gap-6">
+    <div className="flex flex-col lg:flex-row h-full gap-6">
       
       {/* Main Inventory list */}
-      <div className="flex-1 bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs h-full flex flex-col overflow-hidden">
+      <div className={`flex-1 bg-white p-4 md:p-6 rounded-xl border border-gray-200/80 shadow-xs h-full flex flex-col overflow-hidden ${isModalOpen ? 'hidden lg:flex' : 'flex'}`}>
         
         {/* Header and Add button */}
         <div className="flex justify-between items-center mb-6">
@@ -173,8 +173,8 @@ export default function InventoryPanel({
         </div>
 
       {/* Grid inventory list */}
-      <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse text-sm">
+      <div className="flex-1 overflow-auto">
+        <table className="w-full text-left border-collapse text-sm min-w-[600px]">
           <thead>
             <tr className="border-b border-gray-200 text-gray-400 font-bold text-xs uppercase tracking-widest bg-gray-50/80">
               <th className="p-4 rounded-l-md">Producto</th>
@@ -322,8 +322,17 @@ export default function InventoryPanel({
 
       {/* Right Drawer Side Panel: Agregar Nuevo Producto */}
       {isModalOpen && (
-        <div className="w-[420px] bg-white p-8 rounded-3xl border border-gray-200 shadow-lg flex flex-col justify-between overflow-y-auto max-h-full transition-all animate-fade-in shrink-0 text-left">
+        <div className="w-full lg:w-[420px] bg-white p-6 lg:p-8 rounded-3xl border border-gray-200 shadow-lg flex flex-col justify-between overflow-y-auto max-h-full transition-all animate-fade-in shrink-0 text-left">
           <div>
+            {/* Back to list button on mobile/tablet */}
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="lg:hidden mb-4 flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-black transition-colors border-0 bg-transparent cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Volver al inventario
+            </button>
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-150">
               <h3 className="font-bold text-zinc-900 text-sm uppercase tracking-wider">
                 {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}

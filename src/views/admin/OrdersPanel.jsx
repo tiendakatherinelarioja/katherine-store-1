@@ -97,10 +97,10 @@ export default function OrdersPanel() {
   };
 
   return (
-    <div className="flex h-full gap-6">
+    <div className="flex flex-col lg:flex-row h-full gap-6">
       
       {/* Left panel: Orders list */}
-      <div className="flex-1 bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs overflow-y-auto">
+      <div className={`flex-1 bg-white p-4 md:p-6 rounded-xl border border-gray-200/80 shadow-xs overflow-y-auto ${selectedOrderId ? 'hidden lg:flex' : 'flex'} flex-col`}>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Pedidos Recibidos</h2>
@@ -218,10 +218,20 @@ export default function OrdersPanel() {
       </div>
 
       {/* Right panel: Details Drawer */}
-      <div className="w-96 bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs flex flex-col justify-between overflow-y-auto max-h-full">
+      <div className={`w-full lg:w-96 bg-white p-4 md:p-6 rounded-xl border border-gray-200/80 shadow-xs flex flex-col justify-between overflow-y-auto max-h-full ${selectedOrderId ? 'flex' : 'hidden lg:flex'}`}>
         {selectedOrder ? (
           <div className="flex-1 flex flex-col justify-between h-full">
             <div>
+              {/* Back to list button on mobile/tablet */}
+              <button
+                type="button"
+                onClick={() => setSelectedOrderId(null)}
+                className="lg:hidden mb-4 flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-black transition-colors border-0 bg-transparent cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Volver a la lista
+              </button>
+
               <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-100">
                 <div>
                   <h3 className="font-black text-gray-900 text-lg">Detalles del Pedido</h3>
