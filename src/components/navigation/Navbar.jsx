@@ -52,7 +52,7 @@ export default function Navbar({ onCartOpen }) {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between relative">
         
         {/* Left Section: Navigation Links in capsule */}
-        <div className="hidden md:flex items-center gap-1 text-xs font-bold text-gray-505 bg-gray-50 p-1.5 rounded-full border border-gray-200/60 max-w-max">
+        <div className="hidden lg:flex items-center gap-0.5 text-[11px] font-bold text-gray-505 bg-gray-50 p-1 rounded-full border border-gray-200/60 max-w-max">
           <button
             onClick={() => {
               setMobileMenuOpen(false);
@@ -63,7 +63,7 @@ export default function Navbar({ onCartOpen }) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}
-            className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
               isInicioActive
                 ? 'bg-white text-gray-900 shadow-xs border border-gray-200/45'
                 : 'hover:text-black hover:bg-gray-100/40'
@@ -76,7 +76,7 @@ export default function Navbar({ onCartOpen }) {
               setMobileMenuOpen(false);
               setView('catalog');
             }}
-            className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
               isCatalogActive
                 ? 'bg-white text-gray-900 shadow-xs border border-gray-200/45'
                 : 'hover:text-black hover:bg-gray-100/40'
@@ -90,7 +90,7 @@ export default function Navbar({ onCartOpen }) {
               setView('howtobuy');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
               isHowToBuyActive
                 ? 'bg-white text-gray-900 shadow-xs border border-gray-200/45'
                 : 'hover:text-black hover:bg-gray-100/40'
@@ -104,7 +104,7 @@ export default function Navbar({ onCartOpen }) {
               setView('contact');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
               isContactActive
                 ? 'bg-white text-gray-900 shadow-xs border border-gray-200/45'
                 : 'hover:text-black hover:bg-gray-100/40'
@@ -118,7 +118,7 @@ export default function Navbar({ onCartOpen }) {
               setView('myorders');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
               isMyOrdersActive
                 ? 'bg-white text-gray-900 shadow-xs border border-gray-200/45'
                 : 'hover:text-black hover:bg-gray-100/40'
@@ -129,7 +129,7 @@ export default function Navbar({ onCartOpen }) {
         </div>
 
         {/* Center Section: Logo Centered on Desktop, Left-aligned on Mobile */}
-        <div className="md:absolute md:left-1/2 md:top-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 z-10 flex items-center justify-center">
+        <div className="lg:absolute lg:left-1/2 lg:top-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2 z-10 flex items-center justify-center">
           <button 
             className="flex items-center hover:opacity-80 transition-opacity focus:outline-none shrink-0"
             onClick={() => {
@@ -142,7 +142,7 @@ export default function Navbar({ onCartOpen }) {
                 src="/logo.png" 
                 alt="Logo" 
                 onError={() => setLogoError(true)} 
-                className="h-10 w-auto object-contain"
+                className="h-7 lg:h-8 xl:h-9 w-auto object-contain"
               />
             ) : (
               <div className="text-2xl font-bold flex items-center gap-1.5">
@@ -159,7 +159,7 @@ export default function Navbar({ onCartOpen }) {
           {/* Admin Lock Access Icon */}
           <button
             onClick={handleAdminClick}
-            className={`p-2 rounded-full border transition-all items-center justify-center cursor-pointer hidden md:flex ${
+            className={`p-2 rounded-full border transition-all items-center justify-center cursor-pointer hidden lg:flex ${
               view === 'admin' || view === 'login'
                 ? 'bg-zinc-950 border-zinc-950 text-white'
                 : 'bg-white border-gray-200 text-gray-500 hover:border-zinc-800 hover:text-black'
@@ -173,7 +173,7 @@ export default function Navbar({ onCartOpen }) {
           {userRole && (
             <button
               onClick={logoutAdmin}
-              className="p-2 bg-white border border-gray-200 text-gray-400 hover:border-red-600 hover:text-red-600 hover:bg-red-50/20 rounded-full transition-all cursor-pointer hidden md:flex"
+              className="p-2 bg-white border border-gray-200 text-gray-400 hover:border-red-600 hover:text-red-600 hover:bg-red-50/20 rounded-full transition-all cursor-pointer hidden lg:flex"
               title="Cerrar Sesión de Admin"
             >
               <LogOut className="w-5 h-5" />
@@ -183,7 +183,7 @@ export default function Navbar({ onCartOpen }) {
           {/* Search Icon */}
           <button 
             onClick={() => setView('catalog')}
-            className="p-2 text-gray-500 hover:bg-gray-50 border border-transparent hover:border-gray-200 hover:text-black rounded-full transition-colors hidden md:inline-flex cursor-pointer"
+            className="p-2 text-gray-500 hover:bg-gray-50 border border-transparent hover:border-gray-200 hover:text-black rounded-full transition-colors hidden lg:inline-flex cursor-pointer"
             title="Buscar productos"
           >
             <Search className="w-5 h-5" />
@@ -205,7 +205,7 @@ export default function Navbar({ onCartOpen }) {
  
           {/* Mobile Menu Toggle */}
           <button
-            className="p-2 text-gray-500 hover:bg-gray-100 rounded-full md:hidden transition-colors flex items-center justify-center"
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-full lg:hidden transition-colors flex items-center justify-center cursor-pointer"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -215,7 +215,7 @@ export default function Navbar({ onCartOpen }) {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-4 text-sm font-semibold text-gray-500 shadow-lg absolute w-full left-0 z-30">
+        <div className="lg:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-4 text-sm font-semibold text-gray-500 shadow-lg absolute w-full left-0 z-30">
           <button
             onClick={() => {
               setMobileMenuOpen(false);
