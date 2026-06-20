@@ -20,6 +20,7 @@ import Checkout from './views/client/Checkout';
 import Login from './views/client/Login';
 import HowToBuy from './views/client/HowToBuy';
 import Contact from './views/client/Contact';
+import MyOrders from './views/client/MyOrders';
 
 const AdminLayout = lazy(() => import('./views/admin/AdminLayout'));
 
@@ -92,6 +93,7 @@ function AppContent() {
         {view === 'login' && <Login />}
         {view === 'howtobuy' && <HowToBuy />}
         {view === 'contact' && <Contact />}
+        {view === 'myorders' && <MyOrders />}
         {view === 'admin' && (userRole === 'admin' || userRole === 'superadmin') && (
           <Suspense fallback={
             <div className="fixed inset-0 bg-gray-50 flex flex-col items-center justify-center font-jakarta">

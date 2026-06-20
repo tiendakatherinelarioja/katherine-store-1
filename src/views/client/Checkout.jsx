@@ -120,6 +120,11 @@ export default function Checkout() {
     const res = await checkoutAsGuest(submissionData, cart);
 
     if (res.success) {
+      // Save phone number for automatic tracking
+      if (formData.telefono) {
+        localStorage.setItem('katherine_client_phone', formData.telefono.trim());
+      }
+
       // 3. Open WhatsApp Web / App
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodedMessage}`;
@@ -127,7 +132,7 @@ export default function Checkout() {
 
       // 4. Redirect client
       alert('¡Tu pedido ha sido registrado con éxito en nuestro sistema! Te estamos redirigiendo a WhatsApp para coordinar el pago.');
-      setView('home');
+      setView('myorders');
     } else {
       alert('Error al registrar pedido en la base de datos: ' + res.error);
     }

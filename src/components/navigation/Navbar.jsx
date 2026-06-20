@@ -45,6 +45,7 @@ export default function Navbar({ onCartOpen }) {
   const isCatalogActive = (view === 'catalog');
   const isHowToBuyActive = (view === 'howtobuy' || (view === 'home' && activeSection === 'how-to-buy'));
   const isContactActive = (view === 'contact' || (view === 'home' && activeSection === 'contacto'));
+  const isMyOrdersActive = (view === 'myorders');
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
@@ -110,6 +111,20 @@ export default function Navbar({ onCartOpen }) {
             }`}
           >
             Contacto
+          </button>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setView('myorders');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
+              isMyOrdersActive
+                ? 'bg-white text-gray-900 shadow-xs border border-gray-200/45'
+                : 'hover:text-black hover:bg-gray-100/40'
+            }`}
+          >
+            Mis Pedidos
           </button>
         </div>
 
@@ -243,6 +258,16 @@ export default function Navbar({ onCartOpen }) {
             className={`text-left py-2 border-b border-gray-50 hover:text-black transition-colors ${isContactActive ? 'text-black font-extrabold font-sans' : ''}`}
           >
             Contacto
+          </button>
+          <button
+            onClick={() => {
+              setView('myorders');
+              setMobileMenuOpen(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`text-left py-2 border-b border-gray-50 hover:text-black transition-colors ${isMyOrdersActive ? 'text-black font-extrabold font-sans' : ''}`}
+          >
+            Mis Pedidos
           </button>
 
           {/* Divider */}
