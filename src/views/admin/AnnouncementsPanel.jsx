@@ -56,7 +56,7 @@ export default function AnnouncementsPanel() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden">
+    <div className="bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs h-full flex flex-col overflow-hidden">
       
       {/* Header */}
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">

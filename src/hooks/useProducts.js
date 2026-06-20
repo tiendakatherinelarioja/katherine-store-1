@@ -34,7 +34,8 @@ export function useProducts(isAdmin = false) {
         description: item.descripcion || item.description || '',
         rating: parseFloat(item.rating || 5.0),
         reviewsCount: parseInt(item.reviews_count || item.reviewsCount || 0, 10),
-        stock: parseInt(item.stock || 0, 10)
+        stock: parseInt(item.stock || 0, 10),
+        activo: item.activo !== undefined ? item.activo : true
       }));
 
       setProducts(normalized);
@@ -99,14 +100,26 @@ export function useProducts(isAdmin = false) {
         stock: parseInt(productData.stock, 10),
         categoria: productData.category.toLowerCase(),
         descripcion: productData.description,
-        imagen_url: productData.image
+        imagen_url: productData.image,
+        activo: productData.activo !== undefined ? productData.activo : true
       };
 
       const { error: insertErr } = await supabase
         .from('productos')
         .insert([insertData]);
 
-      if (insertErr) throw insertErr;
+      if (insertErr) {
+        if (insertErr.code === '42703' || insertErr.message.includes('column "activo"')) {
+          console.warn('La columna "activo" no existe. Reintentando sin esta columna. Por favor ejecute la migración SQL.');
+          const retryData = { ...insertData };
+          delete retryData.activo;
+          const { error: retryErr } = await supabase.from('productos').insert([retryData]);
+          if (retryErr) throw retryErr;
+          alert('Producto guardado con éxito. Nota: Para habilitar el estado Activo/Inactivo, debe ejecutar la migración SQL en Supabase.');
+        } else {
+          throw insertErr;
+        }
+      }
 
       // Refresh list
       fetchProducts();
@@ -125,7 +138,8 @@ export function useProducts(isAdmin = false) {
         stock: parseInt(productData.stock, 10),
         categoria: productData.category.toLowerCase(),
         descripcion: productData.description,
-        imagen_url: productData.image
+        imagen_url: productData.image,
+        activo: productData.activo !== undefined ? productData.activo : true
       };
 
       const { error: updateErr } = await supabase
@@ -133,7 +147,18 @@ export function useProducts(isAdmin = false) {
         .update(updateData)
         .eq('id', productId);
 
-      if (updateErr) throw updateErr;
+      if (updateErr) {
+        if (updateErr.code === '42703' || updateErr.message.includes('column "activo"')) {
+          console.warn('La columna "activo" no existe. Reintentando sin esta columna. Por favor ejecute la migración SQL.');
+          const retryData = { ...updateData };
+          delete retryData.activo;
+          const { error: retryErr } = await supabase.from('productos').update(retryData).eq('id', productId);
+          if (retryErr) throw retryErr;
+          alert('Producto editado con éxito. Nota: Para habilitar el estado Activo/Inactivo, debe ejecutar la migración SQL en Supabase.');
+        } else {
+          throw updateErr;
+        }
+      }
 
       // Refresh list
       fetchProducts();

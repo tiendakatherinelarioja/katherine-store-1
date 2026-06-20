@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useOrders } from '../../hooks/useOrders';
+import { useCoupons } from '../../hooks/useCoupons';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 
 // Default WhatsApp Number for Administrator (Can be customized)
-const ADMIN_WHATSAPP = '5491100000000'; 
+const ADMIN_WHATSAPP = '5493804918672'; 
 
 export default function Checkout() {
   const { cart, cartTotal, setView } = useCart();
   const { checkoutAsGuest, loading: checkoutLoading } = useOrders();
+  const { validateCoupon } = useCoupons();
+
   const [formData, setFormData] = useState({
     nombre: '',
     telefono: '',
@@ -19,6 +22,32 @@ export default function Checkout() {
     metodoEnvio: 'retiro',
   });
   const [errors, setErrors] = useState({});
+
+  // Coupon promo states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState(null);
+
+  const handleApplyCoupon = async () => {
+    setCouponError(null);
+    if (!couponCode.trim()) return;
+    const res = await validateCoupon(couponCode);
+    if (res.success) {
+      setAppliedCoupon(res.coupon);
+      setCouponCode('');
+    } else {
+      setCouponError(res.error);
+      setAppliedCoupon(null);
+    }
+  };
+
+  const discountAmount = appliedCoupon
+    ? (appliedCoupon.tipo === 'porcentaje'
+        ? cartTotal * (parseFloat(appliedCoupon.valor) / 100)
+        : parseFloat(appliedCoupon.valor))
+    : 0;
+
+  const finalTotal = Math.max(0, cartTotal - discountAmount);
 
   if (cart.length === 0) {
     return (
@@ -73,10 +102,22 @@ export default function Checkout() {
       message += `- *${item.cantidad}x* ${item.nombre} (_$${item.precio.toFixed(2)} c/u_) -> Subtotal: *$${(item.precio * item.cantidad).toFixed(2)}*\n`;
     });
     
-    message += `\n💰 *Total de la Orden:* *$${cartTotal.toFixed(2)}*`;
+    if (appliedCoupon) {
+      message += `\n🎟️ *Cupón Aplicado:* ${appliedCoupon.codigo} (-$${discountAmount.toFixed(2)})\n`;
+    }
+    
+    message += `\n💰 *Total de la Orden:* *$${finalTotal.toFixed(2)}*`;
 
     // 2. Call Supabase RPC transaction hook
-    const res = await checkoutAsGuest(formData, cart);
+    // Pass coupon detail in customer payload for audit
+    const submissionData = {
+      ...formData,
+      cupon_codigo: appliedCoupon ? appliedCoupon.codigo : null,
+      descuento: discountAmount,
+      total_con_descuento: finalTotal
+    };
+    
+    const res = await checkoutAsGuest(submissionData, cart);
 
     if (res.success) {
       // 3. Open WhatsApp Web / App
@@ -254,18 +295,58 @@ export default function Checkout() {
               ))}
             </div>
 
+            {/* Coupon Box */}
+            <div className="py-4 border-t border-gray-200 space-y-2 text-left">
+              <label className="text-xs font-bold text-gray-700 block">¿Tienes un cupón de descuento?</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="CÓDIGO"
+                  className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs uppercase font-bold focus:outline-none focus:ring-1 focus:ring-zinc-800"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  className="px-4 py-2 bg-zinc-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-all cursor-pointer border-0"
+                >
+                  Aplicar
+                </button>
+              </div>
+              {couponError && <p className="text-[10px] text-red-600 font-bold">{couponError}</p>}
+              {appliedCoupon && (
+                <div className="bg-purple-50 border border-purple-100 p-2.5 rounded-xl flex items-center justify-between text-[10px] font-bold text-purple-800">
+                  <span>✓ Cupón {appliedCoupon.codigo} aplicado</span>
+                  <button
+                    type="button"
+                    onClick={() => setAppliedCoupon(null)}
+                    className="text-red-500 hover:text-red-750 hover:underline border-0 bg-transparent font-bold cursor-pointer"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="pt-4 border-t border-gray-200 space-y-3">
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Subtotal</span>
                 <span>${cartTotal.toFixed(2)}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-sm text-purple-650 font-bold">
+                  <span>Descuento ({appliedCoupon.codigo})</span>
+                  <span>-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Envío</span>
                 <span className="text-green-600 font-bold">A coordinar</span>
               </div>
               <div className="flex justify-between items-center text-gray-900 pt-2 font-bold border-t border-dashed border-gray-200">
                 <span className="text-base">Total</span>
-                <span className="text-2xl font-black text-green-600">${cartTotal.toFixed(2)}</span>
+                <span className="text-2xl font-black text-green-600">${finalTotal.toFixed(2)}</span>
               </div>
             </div>
             

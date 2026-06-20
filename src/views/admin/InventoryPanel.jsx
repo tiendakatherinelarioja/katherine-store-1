@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { compressToWebP } from '../../utils/imageProcessor';
 
 export default function InventoryPanel({
@@ -26,6 +26,10 @@ export default function InventoryPanel({
   const [deletingProduct, setDeletingProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const handleStartEdit = (product) => {
     setEditingProduct(product);
     setNewProduct({
@@ -34,7 +38,8 @@ export default function InventoryPanel({
       stock: product.stock.toString(),
       category: product.category,
       description: product.description || '',
-      image: product.image
+      image: product.image,
+      activo: product.activo !== false
     });
     setImagePreview(product.image);
     setCompressionRatio(null);
@@ -50,7 +55,8 @@ export default function InventoryPanel({
       stock: '',
       category: categories[0] || 'Maquillaje',
       description: '',
-      image: ''
+      image: '',
+      activo: true
     });
     setImagePreview('');
     setCompressionRatio(null);
@@ -62,7 +68,8 @@ export default function InventoryPanel({
     stock: '',
     category: categories[0] || 'Maquillaje',
     description: '',
-    image: ''
+    image: '',
+    activo: true
   });
 
   const handleFileChange = async (e) => {
@@ -136,11 +143,16 @@ export default function InventoryPanel({
     setIsModalOpen(false);
   };
 
+  // Pagination calculations
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = products.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="flex h-full gap-6">
       
       {/* Main Inventory list */}
-      <div className="flex-1 bg-white p-6 rounded-md border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden">
+      <div className="flex-1 bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs h-full flex flex-col overflow-hidden">
         
         {/* Header and Add button */}
         <div className="flex justify-between items-center mb-6">
@@ -173,7 +185,7 @@ export default function InventoryPanel({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {products.map((product) => (
+            {paginatedProducts.map((product) => (
               <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
                 
                 {/* Product details */}
@@ -184,7 +196,14 @@ export default function InventoryPanel({
                     className="w-10 h-10 rounded-md object-cover bg-gray-50 flex-shrink-0"
                   />
                   <div>
-                    <span className="font-bold text-gray-900 block truncate max-w-[180px]">{product.name}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-gray-900 block truncate max-w-[150px]">{product.name}</span>
+                      {product.activo === false && (
+                        <span className="bg-red-50 text-red-650 border border-red-150 text-[9px] font-bold px-1.5 py-0.25 rounded shrink-0">
+                          Inactivo
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] text-gray-400">ID: {product.id}</span>
                   </div>
                 </td>
@@ -264,6 +283,41 @@ export default function InventoryPanel({
         </table>
       </div>
 
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-4 shrink-0">
+          <span className="text-xxs text-gray-400 font-bold uppercase tracking-wider">
+            Página {currentPage} de {totalPages} ({products.length} productos)
+          </span>
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className={`p-1.5 border rounded-lg transition-colors cursor-pointer bg-white ${
+                currentPage === 1
+                  ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                  : 'border-gray-250 text-gray-650 hover:bg-gray-50'
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className={`p-1.5 border rounded-lg transition-colors cursor-pointer bg-white ${
+                currentPage === totalPages
+                  ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                  : 'border-gray-250 text-gray-650 hover:bg-gray-50'
+              }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       </div>
 
       {/* Right Drawer Side Panel: Agregar Nuevo Producto */}
@@ -323,6 +377,19 @@ export default function InventoryPanel({
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-zinc-800/20 focus:border-zinc-800 focus:outline-none transition-all text-xs bg-gray-50/70 text-gray-800 font-medium placeholder-gray-400 resize-none"
                     placeholder="Detalla las características del producto..."
                   />
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="product-activo-checkbox"
+                    checked={newProduct.activo !== false}
+                    onChange={(e) => setNewProduct({ ...newProduct, activo: e.target.checked })}
+                    className="w-4 h-4 text-zinc-950 focus:ring-zinc-800 rounded cursor-pointer"
+                  />
+                  <label htmlFor="product-activo-checkbox" className="text-xs font-bold text-gray-800 cursor-pointer">
+                    Producto Activo (Visible en el catálogo público)
+                  </label>
                 </div>
               </div>
 

@@ -7,14 +7,22 @@ export default function Badge({
   ...props
 }) {
   const hasRounded = className.includes('rounded-');
-  const baseStyles = `inline-flex items-center px-2.5 py-0.5 ${hasRounded ? '' : 'rounded-full'} text-xs font-bold transition-all`;
+  const baseStyles = `inline-flex items-center px-2.5 py-0.5 ${hasRounded ? '' : 'rounded-full'} text-[10px] uppercase tracking-wider font-extrabold transition-all`;
   
   const variants = {
-    success: 'bg-green-100 text-green-800 border border-green-200',
-    danger: 'bg-red-100 text-red-800 border border-red-200',
-    info: 'bg-blue-100 text-blue-800 border border-blue-200',
-    warning: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-    neutral: 'bg-gray-100 text-gray-800 border border-gray-200',
+    success: 'bg-emerald-50/80 text-emerald-750 border border-emerald-200/50 shadow-xxs',
+    danger: 'bg-rose-50/80 text-rose-750 border border-rose-200/50 shadow-xxs',
+    info: 'bg-sky-50/80 text-sky-750 border border-sky-200/50 shadow-xxs',
+    warning: 'bg-amber-50/80 text-amber-800 border border-amber-200/50 shadow-xxs',
+    neutral: 'bg-zinc-50/80 text-zinc-700 border border-zinc-200/50 shadow-xxs',
+  };
+
+  const badgeDots = {
+    success: 'bg-emerald-500 shadow-xs shadow-emerald-500/30',
+    danger: 'bg-rose-500 shadow-xs shadow-rose-500/30 animate-pulse',
+    info: 'bg-sky-500 shadow-xs shadow-sky-500/30',
+    warning: 'bg-amber-500 shadow-xs shadow-amber-500/30 animate-pulse',
+    neutral: 'bg-zinc-400',
   };
 
   return (
@@ -22,6 +30,7 @@ export default function Badge({
       className={`${baseStyles} ${variants[variant]} ${className}`}
       {...props}
     >
+      <span className={`w-1.5 h-1.5 rounded-full ${badgeDots[variant]} mr-1.5 shrink-0`} />
       {children}
     </span>
   );

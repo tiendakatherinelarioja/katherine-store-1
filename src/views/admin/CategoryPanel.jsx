@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import { Layers, Plus, Edit2, Trash2, Save, X, AlertCircle, Info } from 'lucide-react';
+import { Layers, Plus, Edit2, Trash2, Save, X, AlertCircle, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CategoryPanel({
   products = [],
@@ -16,6 +16,10 @@ export default function CategoryPanel({
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
   const [deletingName, setDeletingName] = useState(null);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Helper to count how many products belong to a specific category
   const getProductCount = (categoryName) => {
@@ -78,7 +82,7 @@ export default function CategoryPanel({
   };
 
   return (
-    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden">
+    <div className="bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs h-full flex flex-col overflow-hidden">
       
       {/* Header */}
       <div className="mb-6">
@@ -135,102 +139,146 @@ export default function CategoryPanel({
           <div className="text-center py-12 border border-dashed border-gray-200 rounded-md text-gray-400 text-xs">
             No hay categorías registradas en la tienda.
           </div>
-        ) : (
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-gray-200 text-gray-400 font-bold text-xxs uppercase tracking-widest bg-gray-50/80">
-                <th className="p-3.5 pl-4 rounded-l-md">Nombre de Categoría</th>
-                <th className="p-3.5 text-center">Productos Vinculados</th>
-                <th className="p-3.5 rounded-r-md text-right pr-4">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {categoriesList.map((cat) => {
-                const count = getProductCount(cat.nombre);
-                const isEditing = editingId === cat.id;
+        ) : (() => {
+          // Pagination calculations
+          const totalPages = Math.ceil(categoriesList.length / itemsPerPage);
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const paginatedCategories = categoriesList.slice(startIndex, startIndex + itemsPerPage);
 
-                return (
-                  <tr key={cat.id} className="hover:bg-gray-50/40 transition-colors">
-                    
-                    {/* Category Name Column */}
-                    <td className="p-3.5 pl-4 font-bold text-gray-800">
-                      {isEditing ? (
-                        <div className="flex items-center gap-2 max-w-xs">
-                          <Input
-                            type="text"
-                            value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
-                            className="py-1 px-2.5 text-xs bg-white"
-                            autoFocus
-                          />
-                        </div>
-                      ) : (
-                        <span>{cat.nombre}</span>
-                      )}
-                    </td>
-
-                    {/* Associated Products Count Column */}
-                    <td className="p-3.5 text-center">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full font-bold text-xxs ${
-                        count > 0 
-                          ? 'bg-green-50 text-green-700 border border-green-100' 
-                          : 'bg-gray-50 text-gray-400 border border-gray-100'
-                      }`}>
-                        {count} {count === 1 ? 'producto' : 'productos'}
-                      </span>
-                    </td>
-
-                    {/* Actions Column */}
-                    <td className="p-3.5 text-right pr-4">
-                      {isEditing ? (
-                        <div className="flex justify-end gap-1.5">
-                          <button
-                            onClick={() => handleUpdate(cat.nombre)}
-                            className="p-1.5 bg-green-50 text-green-600 rounded-md border border-green-150 hover:bg-green-100 transition-colors cursor-pointer"
-                            title="Guardar nombre"
-                          >
-                            <Save className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={cancelEdit}
-                            className="p-1.5 bg-gray-50 text-gray-500 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
-                            title="Cancelar edición"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex justify-end gap-1.5">
-                          <button
-                            onClick={() => startEdit(cat)}
-                            className="p-1.5 bg-gray-50 text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 rounded-md transition-colors cursor-pointer"
-                            title="Editar Categoría"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => confirmDelete(cat.nombre)}
-                            className="p-1.5 bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-md transition-colors cursor-pointer"
-                            title="Eliminar Categoría"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </td>
-
+          return (
+            <>
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-gray-200 text-gray-400 font-bold text-xxs uppercase tracking-widest bg-gray-50/80">
+                    <th className="p-3.5 pl-4 rounded-l-md">Nombre de Categoría</th>
+                    <th className="p-3.5 text-center">Productos Vinculados</th>
+                    <th className="p-3.5 rounded-r-md text-right pr-4">Acciones</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginatedCategories.map((cat) => {
+                    const count = getProductCount(cat.nombre);
+                    const isEditing = editingId === cat.id;
+
+                    return (
+                      <tr key={cat.id} className="hover:bg-gray-50/40 transition-colors">
+                        
+                        {/* Category Name Column */}
+                        <td className="p-3.5 pl-4 font-bold text-gray-800">
+                          {isEditing ? (
+                            <div className="flex items-center gap-2 max-w-xs">
+                              <Input
+                                type="text"
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                className="py-1 px-2.5 text-xs bg-white"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <span>{cat.nombre}</span>
+                          )}
+                        </td>
+
+                        {/* Associated Products Count Column */}
+                        <td className="p-3.5 text-center">
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full font-bold text-xxs ${
+                            count > 0 
+                              ? 'bg-green-50 text-green-700 border border-green-100' 
+                              : 'bg-gray-50 text-gray-400 border border-gray-100'
+                          }`}>
+                            {count} {count === 1 ? 'producto' : 'productos'}
+                          </span>
+                        </td>
+
+                        {/* Actions Column */}
+                        <td className="p-3.5 text-right pr-4">
+                          {isEditing ? (
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={() => handleUpdate(cat.nombre)}
+                                className="p-1.5 bg-green-50 text-green-600 rounded-md border border-green-150 hover:bg-green-100 transition-colors cursor-pointer"
+                                title="Guardar nombre"
+                              >
+                                <Save className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className="p-1.5 bg-gray-50 text-gray-500 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                                title="Cancelar edición"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={() => startEdit(cat)}
+                                className="p-1.5 bg-gray-50 text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 rounded-md transition-colors cursor-pointer"
+                                title="Editar Categoría"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => confirmDelete(cat.nombre)}
+                                className="p-1.5 bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-md transition-colors cursor-pointer"
+                                title="Eliminar Categoría"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-4 shrink-0">
+                  <span className="text-xxs text-gray-400 font-bold uppercase tracking-wider">
+                    Página {currentPage} de {totalPages} ({categoriesList.length} categorías)
+                  </span>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={`p-1.5 border rounded-lg transition-colors cursor-pointer bg-white ${
+                        currentPage === 1
+                          ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                          : 'border-gray-250 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`p-1.5 border rounded-lg transition-colors cursor-pointer bg-white ${
+                        currentPage === totalPages
+                          ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                          : 'border-gray-250 text-gray-650 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {/* Delete Confirmation Modal */}
       {deletingName && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-md border border-gray-200 shadow-xl max-w-sm w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-xl border border-gray-250 shadow-2xl max-w-sm w-full p-6 space-y-4">
             <div className="flex items-center gap-2 text-red-600">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <h4 className="font-bold text-sm uppercase tracking-wide">¿Confirmar Eliminación?</h4>

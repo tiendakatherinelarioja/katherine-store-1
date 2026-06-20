@@ -78,6 +78,7 @@ export default function Home({ products }) {
     const list = products.filter(
       (p) =>
         p.stock > 0 &&
+        p.activo !== false &&
         ((p.description || '').toLowerCase().includes('promo') ||
           (p.name || '').toLowerCase().includes('promo') ||
           (p.description || '').toLowerCase().includes('oferta') ||
@@ -87,13 +88,13 @@ export default function Home({ products }) {
     );
     if (list.length > 0) return list.slice(0, 4);
     // Fallback
-    return products.filter((p) => p.stock > 0).slice(0, 4);
+    return products.filter((p) => p.stock > 0 && p.activo !== false).slice(0, 4);
   }, [products]);
 
   // 2. Featured: products in stock with highest rating
   const featuredProducts = React.useMemo(() => {
     return [...products]
-      .filter((p) => p.stock > 0)
+      .filter((p) => p.stock > 0 && p.activo !== false)
       .sort((a, b) => b.rating - a.rating)
       .slice(0, 4);
   }, [products]);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ProductFilters from '../../components/product/ProductFilters';
 import ProductGrid from '../../components/product/ProductGrid';
 import { useCategories } from '../../hooks/useCategories';
@@ -10,6 +10,15 @@ export default function Catalog({ products }) {
   const [sortBy, setSortBy] = useState('relevance');
   const { categories: dbCategories } = useCategories();
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryFilter, searchTerm]);
+
   // Load categories dynamically from DB hook
   const categories = useMemo(() => {
     return ['Todos', ...dbCategories];
@@ -17,7 +26,7 @@ export default function Catalog({ products }) {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    let result = products.filter((p) => p.activo !== false);
 
     // Filter by Category
     if (categoryFilter !== 'Todos') {
@@ -65,6 +74,13 @@ export default function Catalog({ products }) {
     return result;
   }, [products, categoryFilter, searchTerm, sortBy]);
 
+  // Paginate list
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = useMemo(() => {
+    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProducts, startIndex]);
+
   return (
     <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 pb-20">
       {/* Title Header */}
@@ -89,12 +105,45 @@ export default function Catalog({ products }) {
       {/* Search results text */}
       <div className="flex items-center justify-between mb-6">
         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-          Mostrando {filteredProducts.length} de {products.length} productos
+          Mostrando {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredProducts.length)} de {filteredProducts.length} productos
         </span>
       </div>
 
       {/* Product Grid */}
-      <ProductGrid products={filteredProducts} />
+      <ProductGrid products={paginatedProducts} />
+
+      {/* Pagination UI Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-gray-100 pt-8 mt-8">
+          <span className="text-xxs font-bold text-gray-400 uppercase tracking-widest">
+            Página {currentPage} de {totalPages}
+          </span>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 border rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer ${
+                currentPage === 1
+                  ? 'border-gray-150 text-gray-300 cursor-not-allowed'
+                  : 'bg-white border-gray-250 text-gray-500 hover:text-black hover:bg-gray-50/50'
+              }`}
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 border rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer ${
+                currentPage === totalPages
+                  ? 'border-gray-150 text-gray-300 cursor-not-allowed'
+                  : 'bg-white border-gray-250 text-gray-500 hover:text-black hover:bg-gray-50/50'
+              }`}
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

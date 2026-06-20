@@ -2,6 +2,7 @@
 
 @theme {
   --font-sans: 'Poppins', sans-serif;
+  --font-jakarta: 'Plus Jakarta Sans', sans-serif;
   --radius-4xl: 2rem;
   --color-soft-green: #f0f9f4;
   --color-soft-blue: #eff6ff;
@@ -20,6 +21,21 @@ body {
 /* Custom smooth transitions for interactive states */
 .transition-all-custom {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Animation Keyframes */
@@ -63,4 +79,35 @@ body {
 
 .animate-bounce-slow {
   animation: bounceSlow 3.5s infinite;
+}
+
+/* --- Mobile Performance & Touch Optimizations --- */
+
+/* Enable hardware-accelerated smooth momentum scrolling on iOS/Android */
+.overflow-y-auto, 
+.overflow-x-auto,
+main,
+aside {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Eliminate double-tap delay on mobile browsers for instant click response */
+a, 
+button, 
+input, 
+select, 
+textarea {
+  touch-action: manipulation;
+}
+
+/* Prevent swipe pull-to-refresh when scrolling drawers or details modals */
+.overscroll-contain,
+.overflow-y-auto {
+  overscroll-behavior-y: contain;
+}
+
+/* Optimize rendering for offscreen static blocks */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
 }

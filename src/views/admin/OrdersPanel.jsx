@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useOrders } from '../../hooks/useOrders';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
-import { Zap, Check, X, PhoneCall, Printer, ClipboardList } from 'lucide-react';
+import { Zap, Check, X, PhoneCall, Printer, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function OrdersPanel() {
   const { orders, loading, error, fetchOrders, updateOrderStatus } = useOrders();
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [confirmCancelId, setConfirmCancelId] = useState(null);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchOrders();
@@ -96,7 +100,7 @@ export default function OrdersPanel() {
     <div className="flex h-full gap-6">
       
       {/* Left panel: Orders list */}
-      <div className="flex-1 bg-white p-6 rounded-md border border-gray-200 shadow-sm overflow-y-auto">
+      <div className="flex-1 bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Pedidos Recibidos</h2>
@@ -123,56 +127,98 @@ export default function OrdersPanel() {
           <div className="text-center py-12 text-gray-400">
             No se han registrado pedidos en la base de datos aún.
           </div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {orders.map((order) => {
-              const statusColors = {
-                pendiente: 'warning',
-                aceptado: 'info',
-                completado: 'success',
-                cancelado: 'danger'
-              };
+        ) : (() => {
+          // Pagination calculations
+          const totalPages = Math.ceil(orders.length / itemsPerPage);
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const paginatedOrders = orders.slice(startIndex, startIndex + itemsPerPage);
 
-              return (
-                <div
-                  key={order.id}
-                  onClick={() => setSelectedOrderId(order.id)}
-                  className={`p-4 rounded-md cursor-pointer transition-all flex items-center justify-between gap-4 border ${
-                    selectedOrderId === order.id
-                      ? 'bg-green-50/40 border-green-200'
-                      : 'border-transparent hover:bg-gray-50/85'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-sm text-gray-900">
-                        {order.cliente}
-                      </span>
-                      <span className="text-xs text-gray-500">#{order.id.slice(-4)}</span>
+          return (
+            <div className="divide-y divide-gray-100">
+              {paginatedOrders.map((order) => {
+                const statusColors = {
+                  pendiente: 'warning',
+                  aceptado: 'info',
+                  completado: 'success',
+                  cancelado: 'danger'
+                };
+
+                return (
+                  <div
+                    key={order.id}
+                    onClick={() => setSelectedOrderId(order.id)}
+                    className={`p-4 rounded-xl cursor-pointer flex items-center justify-between gap-4 border transition-all duration-200 active:scale-[0.99] ${
+                      selectedOrderId === order.id
+                        ? 'bg-zinc-50/80 border-zinc-250 shadow-xxs scale-[1.005] translate-x-0.5'
+                        : 'border-transparent hover:bg-gray-50/80 hover:translate-x-0.5'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-sm text-gray-900">
+                          {order.cliente}
+                        </span>
+                        <span className="text-xs text-gray-550">#{order.id.slice(-4)}</span>
+                      </div>
+                      <p className="text-xs text-gray-550 truncate">
+                        {order.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}
+                      </p>
+                      <span className="text-[10px] text-gray-550 block mt-1">{order.fecha}</span>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">
-                      {order.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}
-                    </p>
-                    <span className="text-[10px] text-gray-500 block mt-1">{order.fecha}</span>
-                  </div>
 
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className="font-extrabold text-sm text-gray-900">
-                      ${order.total.toFixed(2)}
-                    </span>
-                    <Badge variant={statusColors[order.estado] || 'neutral'}>
-                      {order.estado}
-                    </Badge>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span className="font-extrabold text-sm text-gray-900">
+                        ${order.total.toFixed(2)}
+                      </span>
+                      <Badge variant={statusColors[order.estado] || 'neutral'}>
+                        {order.estado}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-4 shrink-0">
+                  <span className="text-xxs text-gray-400 font-bold uppercase tracking-wider">
+                    Página {currentPage} de {totalPages} ({orders.length} pedidos)
+                  </span>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={`p-1.5 border rounded-lg transition-colors cursor-pointer bg-white ${
+                        currentPage === 1
+                          ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                          : 'border-gray-250 text-gray-650 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`p-1.5 border rounded-lg transition-colors cursor-pointer bg-white ${
+                        currentPage === totalPages
+                          ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                          : 'border-gray-250 text-gray-650 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Right panel: Details Drawer */}
-      <div className="w-96 bg-white p-6 rounded-md border border-gray-200 shadow-sm flex flex-col justify-between overflow-y-auto max-h-full">
+      <div className="w-96 bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs flex flex-col justify-between overflow-y-auto max-h-full">
         {selectedOrder ? (
           <div className="flex-1 flex flex-col justify-between h-full">
             <div>
