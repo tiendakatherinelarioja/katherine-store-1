@@ -113,8 +113,8 @@ export default function Navbar({ onCartOpen }) {
           </button>
         </div>
 
-        {/* Center Section: Logo Centered */}
-        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
+        {/* Center Section: Logo Centered on Desktop, Left-aligned on Mobile */}
+        <div className="md:absolute md:left-1/2 md:top-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 z-10 flex items-center justify-center">
           <button 
             className="flex items-center hover:opacity-80 transition-opacity focus:outline-none shrink-0"
             onClick={() => {
@@ -144,7 +144,7 @@ export default function Navbar({ onCartOpen }) {
           {/* Admin Lock Access Icon */}
           <button
             onClick={handleAdminClick}
-            className={`p-2 rounded-full border transition-all flex items-center justify-center cursor-pointer ${
+            className={`p-2 rounded-full border transition-all items-center justify-center cursor-pointer hidden md:flex ${
               view === 'admin' || view === 'login'
                 ? 'bg-zinc-950 border-zinc-950 text-white'
                 : 'bg-white border-gray-200 text-gray-500 hover:border-zinc-800 hover:text-black'
@@ -158,7 +158,7 @@ export default function Navbar({ onCartOpen }) {
           {userRole && (
             <button
               onClick={logoutAdmin}
-              className="p-2 bg-white border border-gray-200 text-gray-400 hover:border-red-600 hover:text-red-600 hover:bg-red-50/20 rounded-full transition-all cursor-pointer"
+              className="p-2 bg-white border border-gray-200 text-gray-400 hover:border-red-600 hover:text-red-600 hover:bg-red-50/20 rounded-full transition-all cursor-pointer hidden md:flex"
               title="Cerrar Sesión de Admin"
             >
               <LogOut className="w-5 h-5" />
@@ -168,7 +168,7 @@ export default function Navbar({ onCartOpen }) {
           {/* Search Icon */}
           <button 
             onClick={() => setView('catalog')}
-            className="p-2 text-gray-500 hover:bg-gray-50 border border-transparent hover:border-gray-200 hover:text-black rounded-full transition-colors hidden sm:inline-flex cursor-pointer"
+            className="p-2 text-gray-500 hover:bg-gray-50 border border-transparent hover:border-gray-200 hover:text-black rounded-full transition-colors hidden md:inline-flex cursor-pointer"
             title="Buscar productos"
           >
             <Search className="w-5 h-5" />
@@ -244,6 +244,48 @@ export default function Navbar({ onCartOpen }) {
           >
             Contacto
           </button>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-1"></div>
+
+          {/* Search Item on Mobile Menu */}
+          <button
+            onClick={() => {
+              setView('catalog');
+              setMobileMenuOpen(false);
+            }}
+            className="text-left py-2 hover:text-black transition-colors flex items-center gap-2 text-gray-500"
+          >
+            <Search className="w-4 h-4" />
+            Buscar productos
+          </button>
+
+          {/* Admin Login/Panel Item on Mobile Menu */}
+          <button
+            onClick={handleAdminClick}
+            className={`text-left py-2.5 rounded-xl px-3 transition-all flex items-center gap-2 border cursor-pointer active:scale-[0.98] ${
+              view === 'admin' || view === 'login'
+                ? 'bg-zinc-950 border-zinc-950 text-white font-bold'
+                : 'hover:text-black hover:bg-gray-50 border-gray-200 text-gray-600 bg-white shadow-xs'
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            {userRole ? 'Panel de Administración' : 'Acceso Administrativo'}
+          </button>
+
+          {/* Logout on Mobile Menu if logged in */}
+          {userRole && (
+            <button
+              onClick={() => {
+                logoutAdmin();
+                setMobileMenuOpen(false);
+              }}
+              className="text-left py-2.5 px-3 rounded-xl hover:bg-red-50 text-red-500 hover:text-red-600 border border-transparent hover:border-red-100 transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98]"
+            >
+              <LogOut className="w-4 h-4" />
+              Cerrar Sesión
+            </button>
+          )}
         </div>
       )}
     </header>
