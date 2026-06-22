@@ -3,19 +3,25 @@ import { useCart } from '../../context/CartContext';
 import Badge from '../ui/Badge';
 
 export default function ProductCard({ product }) {
-  const { addToCart, setSelectedProduct } = useCart();
+  const { addToCart, setSelectedProduct, setView } = useCart();
   const [liked, setLiked] = useState(false);
 
   const handleAddToCart = (e) => {
-    e.stopPropagation(); // Avoid triggering details modal
+    e.stopPropagation(); // Avoid triggering details navigation
     if (product.stock > 0) {
       addToCart(product, 1);
     }
   };
 
+  const handleCardClick = () => {
+    setSelectedProduct(product);
+    setView('product-detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div 
-      onClick={() => setSelectedProduct(product)}
+      onClick={handleCardClick}
       className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
     >
       {/* Product Image and Overlay Tags */}
@@ -73,7 +79,7 @@ export default function ProductCard({ product }) {
 
       {/* Info details */}
       <div className="flex-1 flex flex-col px-2">
-        <h4 className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-green-600 transition-colors">
+        <h4 className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-zinc-600 transition-colors">
           {product.name}
         </h4>
         <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">
@@ -83,7 +89,7 @@ export default function ProductCard({ product }) {
         {/* Price, Stars and Add to Cart Section */}
         <div className="mt-auto pt-4 flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-green-600 border border-green-600 px-2 py-0.5 rounded text-sm font-bold">
+            <span className="font-extrabold text-zinc-950 tracking-tight text-base">
               ${product.price.toFixed(2)}
             </span>
             <div className="flex items-center gap-1">

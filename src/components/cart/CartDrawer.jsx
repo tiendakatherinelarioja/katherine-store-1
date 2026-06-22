@@ -103,7 +103,7 @@ export default function CartDrawer({ isOpen, onClose }) {
             <div className="p-6 border-t border-gray-100 bg-gray-50/50">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-gray-500 font-medium text-sm">Subtotal</span>
-                <span className="text-2xl font-black text-green-600">
+                <span className="text-2xl font-extrabold text-zinc-950 tracking-tight">
                   ${cartTotal.toFixed(2)}
                 </span>
               </div>

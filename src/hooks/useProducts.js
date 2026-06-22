@@ -35,7 +35,8 @@ export function useProducts(isAdmin = false) {
         rating: parseFloat(item.rating || 5.0),
         reviewsCount: parseInt(item.reviews_count || item.reviewsCount || 0, 10),
         stock: parseInt(item.stock || 0, 10),
-        activo: item.activo !== undefined ? item.activo : true
+        activo: item.activo !== undefined ? item.activo : true,
+        relevante: item.relevante !== undefined ? item.relevante : false
       }));
 
       setProducts(normalized);
@@ -101,7 +102,8 @@ export function useProducts(isAdmin = false) {
         categoria: productData.category.toLowerCase(),
         descripcion: productData.description,
         imagen_url: productData.image,
-        activo: productData.activo !== undefined ? productData.activo : true
+        activo: productData.activo !== undefined ? productData.activo : true,
+        relevante: productData.relevante !== undefined ? productData.relevante : false
       };
 
       const { error: insertErr } = await supabase
@@ -139,7 +141,8 @@ export function useProducts(isAdmin = false) {
         categoria: productData.category.toLowerCase(),
         descripcion: productData.description,
         imagen_url: productData.image,
-        activo: productData.activo !== undefined ? productData.activo : true
+        activo: productData.activo !== undefined ? productData.activo : true,
+        relevante: productData.relevante !== undefined ? productData.relevante : false
       };
 
       const { error: updateErr } = await supabase

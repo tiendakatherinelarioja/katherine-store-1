@@ -38,7 +38,7 @@ export default function CartItem({ item }) {
             </button>
           </div>
           
-          <span className="text-sm font-bold text-green-600">
+          <span className="text-sm font-extrabold text-zinc-950 tracking-tight">
             ${(precio * cantidad).toFixed(2)}
           </span>
         </div>

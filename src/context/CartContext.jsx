@@ -19,6 +19,10 @@ export function CartProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  
+  // Client Auth Modal States
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState('login'); // 'login' | 'register' | 'profile'
 
   useEffect(() => {
     localStorage.setItem('katherine_cart', JSON.stringify(cart));
@@ -154,6 +158,87 @@ export function CartProvider({ children }) {
     }
   };
 
+  const loginClient = async (email, password) => {
+    try {
+      setCheckingAuth(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('Error in loginClient:', err);
+      return { success: false, error: err.message };
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
+
+  const registerClient = async (email, password, metadata) => {
+    try {
+      setCheckingAuth(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nombre: metadata.nombre || '',
+            telefono: metadata.telefono || '',
+            direccion: metadata.direccion || '',
+            rol: 'cliente'
+          }
+        }
+      });
+      if (error) throw error;
+      return { success: true, user: data?.user };
+    } catch (err) {
+      console.error('Error in registerClient:', err);
+      return { success: false, error: err.message };
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('Error in loginWithGoogle:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const updateClientProfile = async (metadata) => {
+    try {
+      setCheckingAuth(true);
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          nombre: metadata.nombre,
+          telefono: metadata.telefono,
+          direccion: metadata.direccion
+        }
+      });
+      if (error) throw error;
+      if (data?.user) {
+        setUser(data.user);
+      }
+      return { success: true };
+    } catch (err) {
+      console.error('Error in updateClientProfile:', err);
+      return { success: false, error: err.message };
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
+
   const addToCart = (product, quantity = 1) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
@@ -222,7 +307,15 @@ export function CartProvider({ children }) {
         userRole,
         checkingAuth,
         loginAdmin,
-        logoutAdmin
+        logoutAdmin,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
+        authModalTab,
+        setAuthModalTab,
+        loginClient,
+        registerClient,
+        loginWithGoogle,
+        updateClientProfile
       }}
     >
       {children}

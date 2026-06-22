@@ -43,7 +43,7 @@ export default function Contact() {
                 Dirección
               </span>
               <p className="text-sm text-gray-500 leading-relaxed pl-6 max-w-md">
-                La Rioja - Pelagio B. Luna 619. Showroom y retiros.
+                Pelagio B. Luna 619, F5300 La Rioja (Katherine La Rioja). Showroom y retiros.
               </p>
             </div>
 
@@ -168,6 +168,28 @@ export default function Contact() {
         </div>
 
       </div>
+
+      {/* Map Section */}
+      <div className="mt-16 w-full">
+        <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+          <MapPin className="w-4 h-4 text-gray-900" />
+          Nuestra Ubicación
+        </h3>
+        <div className="border border-gray-200/60 rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 bg-gray-50">
+          <iframe
+            src="https://maps.google.com/maps?q=Pelagio%20B.%20Luna%20619%2C%20F5300%20La%20Rioja&t=&z=17&ie=UTF8&iwloc=&output=embed"
+            width="100%"
+            height="400"
+            style={{ border: 0, display: 'block' }}
+            allowFullScreen=""
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Ubicación de Katherine La Rioja"
+            className="grayscale-[15%] hover:grayscale-0 transition-all duration-500"
+          />
+        </div>
+      </div>
+
     </div>
   );
 }

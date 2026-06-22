@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useOrders } from '../../hooks/useOrders';
 import { useCoupons } from '../../hooks/useCoupons';
@@ -9,7 +9,7 @@ import Button from '../../components/ui/Button';
 const ADMIN_WHATSAPP = '5493804918672'; 
 
 export default function Checkout() {
-  const { cart, cartTotal, setView } = useCart();
+  const { cart, cartTotal, setView, user, setIsAuthModalOpen, setAuthModalTab } = useCart();
   const { checkoutAsGuest, loading: checkoutLoading } = useOrders();
   const { validateCoupon } = useCoupons();
 
@@ -21,6 +21,19 @@ export default function Checkout() {
     metodoPago: 'efectivo',
     metodoEnvio: 'retiro',
   });
+
+  // Pre-fill form if user is logged in
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        nombre: user.user_metadata?.nombre || user.user_metadata?.full_name || prev.nombre,
+        telefono: user.user_metadata?.telefono || prev.telefono,
+        email: user.email || prev.email,
+        direccion: user.user_metadata?.direccion || prev.direccion,
+      }));
+    }
+  }, [user]);
   const [errors, setErrors] = useState({});
 
   // Coupon promo states
@@ -150,6 +163,44 @@ export default function Checkout() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Form Column */}
         <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6 bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xs">
+          
+          {/* User Auth Banners */}
+          {!user ? (
+            <div className="border-b border-gray-100 pb-5 mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-gray-500">
+              <div>
+                <span className="font-bold text-zinc-900 block mb-0.5">¿Ya tenés una cuenta?</span>
+                <p>Iniciá sesión para completar tus datos de envío automáticamente y guardar tu compra.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModalTab('login');
+                  setIsAuthModalOpen(true);
+                }}
+                className="text-zinc-950 font-bold hover:underline bg-transparent border-0 cursor-pointer text-xs"
+              >
+                Iniciar Sesión &rarr;
+              </button>
+            </div>
+          ) : (
+            <div className="border-b border-gray-100 pb-5 mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-gray-500">
+              <div>
+                <span className="font-bold text-zinc-900 block mb-0.5">Conectado como {user.user_metadata?.nombre || user.email}</span>
+                <p>Tus datos guardados de envío y contacto se han completado automáticamente.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModalTab('profile');
+                  setIsAuthModalOpen(true);
+                }}
+                className="text-zinc-950 font-bold hover:underline bg-transparent border-0 cursor-pointer text-xs"
+              >
+                Mi Cuenta &rarr;
+              </button>
+            </div>
+          )}
+
           <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
             Datos de Contacto
           </h3>
@@ -347,11 +398,11 @@ export default function Checkout() {
               )}
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Envío</span>
-                <span className="text-green-600 font-bold">A coordinar</span>
+                <span className="text-zinc-950 font-bold">A coordinar</span>
               </div>
               <div className="flex justify-between items-center text-gray-900 pt-2 font-bold border-t border-dashed border-gray-200">
                 <span className="text-base">Total</span>
-                <span className="text-2xl font-black text-green-600">${finalTotal.toFixed(2)}</span>
+                <span className="text-2xl font-extrabold text-zinc-950 tracking-tight">${finalTotal.toFixed(2)}</span>
               </div>
             </div>
             

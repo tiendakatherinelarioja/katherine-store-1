@@ -15,11 +15,12 @@ import {
   Clock, 
   CheckCircle2, 
   XCircle, 
-  AlertCircle 
+  AlertCircle,
+  User
 } from 'lucide-react';
 
 export default function MyOrders() {
-  const { setView } = useCart();
+  const { setView, user } = useCart();
   const [phone, setPhone] = useState('');
   const [savedPhone, setSavedPhone] = useState('');
   const [orders, setOrders] = useState([]);
@@ -27,15 +28,26 @@ export default function MyOrders() {
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
 
-  // Load saved phone number on mount
+  // Load saved phone number or user orders on mount/session changes
   useEffect(() => {
-    const localPhone = localStorage.getItem('katherine_client_phone');
-    if (localPhone) {
-      setSavedPhone(localPhone);
-      setPhone(localPhone);
-      fetchClientOrders(localPhone);
+    if (user) {
+      const userPhone = user.user_metadata?.telefono || '';
+      const localPhone = localStorage.getItem('katherine_client_phone') || '';
+      fetchClientOrders(userPhone || localPhone, user.email);
+    } else {
+      const localPhone = localStorage.getItem('katherine_client_phone');
+      if (localPhone) {
+        setSavedPhone(localPhone);
+        setPhone(localPhone);
+        fetchClientOrders(localPhone);
+      } else {
+        setSavedPhone('');
+        setPhone('');
+        setOrders([]);
+        setSearched(false);
+      }
     }
-  }, []);
+  }, [user]);
 
   const normalizeOrder = useCallback((o) => {
     const rawItems = o.items || o.detalles_pedido || [];
@@ -63,19 +75,28 @@ export default function MyOrders() {
     };
   }, []);
 
-  const fetchClientOrders = async (targetPhone) => {
-    if (!targetPhone.trim()) return;
+  const fetchClientOrders = async (targetPhone, targetEmail) => {
+    const cleanPhone = targetPhone ? targetPhone.trim() : '';
+    const cleanEmail = targetEmail ? targetEmail.trim() : '';
+    
+    if (!cleanPhone && !cleanEmail) return;
     
     setLoading(true);
     setError('');
     setSearched(true);
     
     try {
-      const cleanPhone = targetPhone.trim();
-      const { data, error: fetchErr } = await supabase
-        .from('vista_pedidos_completos')
-        .select('*')
-        .eq('cliente_telefono', cleanPhone);
+      let query = supabase.from('vista_pedidos_completos').select('*');
+      
+      if (cleanEmail && cleanPhone) {
+        query = query.or(`cliente_email.eq.${cleanEmail},cliente_telefono.eq.${cleanPhone}`);
+      } else if (cleanEmail) {
+        query = query.eq('cliente_email', cleanEmail);
+      } else {
+        query = query.eq('cliente_telefono', cleanPhone);
+      }
+
+      const { data, error: fetchErr } = await query;
 
       if (fetchErr) throw fetchErr;
 
@@ -84,8 +105,10 @@ export default function MyOrders() {
       normalized.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
       
       setOrders(normalized);
-      localStorage.setItem('katherine_client_phone', cleanPhone);
-      setSavedPhone(cleanPhone);
+      if (cleanPhone) {
+        localStorage.setItem('katherine_client_phone', cleanPhone);
+        setSavedPhone(cleanPhone);
+      }
     } catch (err) {
       console.error('Error fetching client orders:', err);
       setError('Ocurrió un error al buscar tus pedidos. Por favor, intenta de nuevo.');
@@ -113,7 +136,7 @@ export default function MyOrders() {
       case 'pendiente':
         return {
           label: 'Pendiente',
-          color: 'text-amber-600 bg-amber-50 border-amber-150',
+          color: 'text-zinc-700 border-zinc-200 bg-transparent',
           dotColor: 'bg-amber-500',
           icon: <Clock className="w-5 h-5 text-amber-500" />,
           desc: 'Tu pedido ha sido recibido. Se encuentra a la espera de validación de pago y stock por parte de la tienda.'
@@ -121,7 +144,7 @@ export default function MyOrders() {
       case 'aceptado':
         return {
           label: 'Aceptado',
-          color: 'text-blue-600 bg-blue-50 border-blue-150',
+          color: 'text-zinc-700 border-zinc-200 bg-transparent',
           dotColor: 'bg-blue-500',
           icon: <Package className="w-5 h-5 text-blue-500" />,
           desc: '¡Tu pedido fue aceptado! Estamos preparando tus productos para el envío o retiro.'
@@ -129,25 +152,25 @@ export default function MyOrders() {
       case 'completado':
         return {
           label: 'Completado',
-          color: 'text-green-600 bg-green-50 border-green-150',
-          dotColor: 'bg-green-500',
-          icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+          color: 'text-zinc-700 border-zinc-200 bg-transparent',
+          dotColor: 'bg-emerald-500',
+          icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
           desc: 'El pedido fue entregado y abonado con éxito. ¡Muchas gracias por tu compra!'
         };
       case 'cancelado':
         return {
           label: 'Cancelado',
-          color: 'text-red-600 bg-red-50 border-red-150',
-          dotColor: 'bg-red-500',
-          icon: <XCircle className="w-5 h-5 text-red-500" />,
+          color: 'text-zinc-700 border-zinc-200 bg-transparent',
+          dotColor: 'bg-rose-500',
+          icon: <XCircle className="w-5 h-5 text-rose-500" />,
           desc: 'Este pedido ha sido cancelado o rechazado.'
         };
       default:
         return {
           label: estado,
-          color: 'text-gray-600 bg-gray-50 border-gray-150',
-          dotColor: 'bg-gray-450',
-          icon: <Clock className="w-5 h-5 text-gray-500" />,
+          color: 'text-zinc-700 border-zinc-200 bg-transparent',
+          dotColor: 'bg-zinc-400',
+          icon: <Clock className="w-5 h-5 text-zinc-500" />,
           desc: 'Estado del pedido en proceso.'
         };
     }
@@ -167,7 +190,7 @@ export default function MyOrders() {
       </div>
 
       {/* Phone input form if not logged in / no phone saved */}
-      {!savedPhone ? (
+      {!savedPhone && !user ? (
         <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg max-w-md mx-auto">
           <form onSubmit={handleSearchSubmit} className="space-y-6">
             <div className="text-center mb-4">
@@ -193,37 +216,64 @@ export default function MyOrders() {
           </form>
         </div>
       ) : (
-        <div className="space-y-8">
-          
-          {/* Saved Phone Status Bar */}
-          <div className="bg-gray-50/50 border border-gray-100 px-6 py-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white border border-gray-150 rounded-full flex items-center justify-center shadow-xxs">
-                <Phone className="w-4 h-4 text-zinc-950" />
+        <div className="space-y-8">          {/* Account Status Bar (if logged in) or Saved Phone Status Bar */}
+          {user ? (
+            <div className="bg-zinc-50 border border-zinc-200/50 px-6 py-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-xxs">
+                  <User className="w-4 h-4 text-zinc-950" />
+                </div>
+                <div className="text-left">
+                  <span className="text-[10px] font-bold text-zinc-950 uppercase tracking-widest block">Cuenta Conectada</span>
+                  <span className="font-bold text-gray-900 text-sm">{user.user_metadata?.nombre || user.email}</span>
+                </div>
               </div>
-              <div className="text-left">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Historial de Teléfono</span>
-                <span className="font-bold text-gray-900 text-sm">{savedPhone}</span>
+              
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  onClick={() => {
+                    const userPhone = user.user_metadata?.telefono || '';
+                    const localPhone = localStorage.getItem('katherine_client_phone') || '';
+                    fetchClientOrders(userPhone || localPhone, user.email);
+                  }}
+                  disabled={loading}
+                  className="px-4 py-2 border border-gray-200 hover:border-zinc-800 bg-white hover:text-black rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xxs active:scale-[0.98]"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                  Actualizar
+                </button>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <button
-                onClick={() => fetchClientOrders(savedPhone)}
-                disabled={loading}
-                className="px-4 py-2 border border-gray-200 hover:border-zinc-800 bg-white hover:text-black rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xxs active:scale-[0.98]"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                Actualizar
-              </button>
-              <button
-                onClick={handleClearPhone}
-                className="px-4 py-2 border border-transparent text-gray-400 hover:text-red-500 rounded-xl text-xs font-bold transition-all cursor-pointer"
-              >
-                Consultar otro número
-              </button>
+          ) : (
+            <div className="bg-gray-50/50 border border-gray-150 px-6 py-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white border border-gray-150 rounded-full flex items-center justify-center shadow-xxs">
+                  <Phone className="w-4 h-4 text-zinc-950" />
+                </div>
+                <div className="text-left">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Historial de Teléfono</span>
+                  <span className="font-bold text-gray-900 text-sm">{savedPhone}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  onClick={() => fetchClientOrders(savedPhone)}
+                  disabled={loading}
+                  className="px-4 py-2 border border-gray-200 hover:border-zinc-800 bg-white hover:text-black rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xxs active:scale-[0.98]"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                  Actualizar
+                </button>
+                <button
+                  onClick={handleClearPhone}
+                  className="px-4 py-2 border border-transparent text-gray-400 hover:text-red-500 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Consultar otro número
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Error Message */}
           {error && (
@@ -248,10 +298,16 @@ export default function MyOrders() {
                 <Package className="w-8 h-8" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">No se encontraron pedidos</h3>
-              <p className="text-gray-500 text-xs mb-6">
-                No pudimos localizar compras activas asociadas al número de teléfono <strong className="text-gray-800">{savedPhone}</strong>.
-              </p>
-              <Button onClick={handleClearPhone}>Intentar con otro número</Button>
+              {user ? (
+                <p className="text-gray-500 text-xs mb-6">
+                  No pudimos localizar compras asociadas a tu cuenta (<strong className="text-gray-800">{user.email}</strong>). Si realizaste compras como invitado anteriormente, puedes buscarlas por tu número de teléfono cerrando sesión.
+                </p>
+              ) : (
+                <p className="text-gray-500 text-xs mb-6">
+                  No pudimos localizar compras activas asociadas al número de teléfono <strong className="text-gray-800">{savedPhone}</strong>.
+                </p>
+              )}
+              {!user && <Button onClick={handleClearPhone}>Intentar con otro número</Button>}
             </div>
           )}
 
@@ -347,7 +403,7 @@ export default function MyOrders() {
                       {/* Bottom totals bar */}
                       <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Monto Total</span>
-                        <span className="text-xl font-black text-green-600 font-sans">
+                        <span className="text-xl font-extrabold text-zinc-950 tracking-tight">
                           ${order.total.toFixed(2)}
                         </span>
                       </div>

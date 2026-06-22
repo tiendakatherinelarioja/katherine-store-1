@@ -3,6 +3,7 @@ import { useCart } from '../../context/CartContext';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
 import ProductCard from '../../components/product/ProductCard';
 import { ChevronLeft, ChevronRight, Megaphone, ArrowRight, Sparkles, Tag, Gift, Award, Globe, ShoppingBag, ArrowUpRight } from 'lucide-react';
+import { supabase } from '../../services/supabaseClient';
 
 export default function Home({ products }) {
   const { setView, setCategoryFilter } = useCart();
@@ -14,21 +15,21 @@ export default function Home({ products }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const slides = [
     {
-      image: '/slides/makeup.png',
+      image: '/slides/makeup_hero.png',
       subtitle: 'En esta temporada, encuentra lo mejor 🔥',
       title: 'Cosméticos & Maquillaje',
       desc: 'Resalta tu belleza natural. Descubre nuestra colección exclusiva de labiales, bases y sombras de alta calidad.',
       category: 'Maquillaje'
     },
     {
-      image: '/slides/manicure.png',
+      image: '/slides/manicure_hero.png',
       subtitle: 'Uñas impecables y profesionales ✨',
       title: 'Manicura & Nail Art',
       desc: 'Luce unas manos perfectas. Esmaltes semipermanentes, cabinas y accesorios para manicura profesional en casa.',
       category: 'Manicura'
     },
     {
-      image: '/slides/fashion.png',
+      image: '/slides/fashion_hero.png',
       subtitle: 'Tu estilo, tu personalidad 💫',
       title: 'Ropa & Accesorios',
       desc: 'El complemento ideal para tu look. Carteras exclusivas, anteojos de sol, termos premium y bijouterie de diseño.',
@@ -71,11 +72,38 @@ export default function Home({ products }) {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
+  // Fetch sales counts for dynamic Best Sellers (Destacados)
+  const [salesCounts, setSalesCounts] = useState({});
+
+  useEffect(() => {
+    const fetchSalesCounts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('detalles_pedido')
+          .select('producto_id, cantidad');
+        if (!error && data) {
+          const counts = {};
+          data.forEach((row) => {
+            const pId = row.producto_id;
+            counts[pId] = (counts[pId] || 0) + (row.cantidad || 0);
+          });
+          setSalesCounts(counts);
+        }
+      } catch (err) {
+        console.error('Error fetching sales counts:', err);
+      }
+    };
+    fetchSalesCounts();
+  }, []);
+
   // Filter products for Promotions & Featured
-  // 1. Promotions: products in stock with "promo", "oferta" or "descuento" in name/desc. 
-  // Fallback: first 4 in-stock products with a custom promo label
+  // 1. Promotions: explicitly marked as relevante = true. Fallback: text matching & stock
   const promoProducts = React.useMemo(() => {
-    const list = products.filter(
+    const list = products.filter((p) => p.stock > 0 && p.activo !== false && p.relevante === true);
+    if (list.length > 0) return list;
+    
+    // Fallback
+    const fallbackList = products.filter(
       (p) =>
         p.stock > 0 &&
         p.activo !== false &&
@@ -86,18 +114,22 @@ export default function Home({ products }) {
           (p.description || '').toLowerCase().includes('descuento') ||
           (p.name || '').toLowerCase().includes('descuento'))
     );
-    if (list.length > 0) return list.slice(0, 4);
-    // Fallback
+    if (fallbackList.length > 0) return fallbackList.slice(0, 4);
     return products.filter((p) => p.stock > 0 && p.activo !== false).slice(0, 4);
   }, [products]);
 
-  // 2. Featured: products in stock with highest rating
+  // 2. Featured: products in stock sorted by units sold, fallback to rating
   const featuredProducts = React.useMemo(() => {
     return [...products]
       .filter((p) => p.stock > 0 && p.activo !== false)
-      .sort((a, b) => b.rating - a.rating)
+      .sort((a, b) => {
+        const salesA = salesCounts[a.id] || 0;
+        const salesB = salesCounts[b.id] || 0;
+        if (salesB !== salesA) return salesB - salesA;
+        return b.rating - a.rating;
+      })
       .slice(0, 4);
-  }, [products]);
+  }, [products, salesCounts]);
 
   return (
     <div className="flex flex-col gap-12 pb-24 bg-gray-50/30">

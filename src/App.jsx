@@ -9,6 +9,7 @@ import Footer from './components/navigation/Footer';
 
 // UI and Cart Components
 import CartDrawer from './components/cart/CartDrawer';
+import AuthModal from './components/ui/AuthModal';
 import Modal from './components/ui/Modal';
 import Button from './components/ui/Button';
 import Badge from './components/ui/Badge';
@@ -21,6 +22,8 @@ import Login from './views/client/Login';
 import HowToBuy from './views/client/HowToBuy';
 import Contact from './views/client/Contact';
 import MyOrders from './views/client/MyOrders';
+import ProductDetail from './views/client/ProductDetail';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminLayout = lazy(() => import('./views/admin/AdminLayout'));
 
@@ -70,47 +73,59 @@ function AppContent() {
       {view !== 'admin' && <Navbar onCartOpen={() => setIsCartOpen(true)} />}
 
       {/* 2. Main content pages */}
-      <main className="flex-1">
-        {view === 'home' && (
-          clientProductsLoading ? (
-            <div className="flex justify-center items-center py-20"><span className="text-gray-500 font-bold animate-pulse">Cargando catálogo...</span></div>
-          ) : clientProductsError ? (
-            <div className="text-center py-20 text-red-500 font-bold">{clientProductsError}</div>
-          ) : (
-            <Home products={clientProducts} />
-          )
-        )}
-        {view === 'catalog' && (
-          clientProductsLoading ? (
-            <div className="flex justify-center items-center py-20"><span className="text-gray-500 font-bold animate-pulse">Cargando catálogo...</span></div>
-          ) : clientProductsError ? (
-            <div className="text-center py-20 text-red-500 font-bold">{clientProductsError}</div>
-          ) : (
-            <Catalog products={clientProducts} />
-          )
-        )}
-        {view === 'checkout' && <Checkout />}
-        {view === 'login' && <Login />}
-        {view === 'howtobuy' && <HowToBuy />}
-        {view === 'contact' && <Contact />}
-        {view === 'myorders' && <MyOrders />}
-        {view === 'admin' && (userRole === 'admin' || userRole === 'superadmin') && (
-          <Suspense fallback={
-            <div className="fixed inset-0 bg-gray-50 flex flex-col items-center justify-center font-jakarta">
-              <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-zinc-950 animate-spin mb-4" />
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Cargando Panel...</span>
-            </div>
-          }>
-            <AdminLayout
-              products={adminProducts}
-              updateProductStock={updateProductStock}
-              updateProductPrice={updateProductPrice}
-              addProduct={addProduct}
-              editProduct={editProduct}
-              deleteProduct={deleteProduct}
-            />
-          </Suspense>
-        )}
+      <main className="flex-1 relative">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={view}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="w-full h-full"
+          >
+            {view === 'home' && (
+              clientProductsLoading ? (
+                <div className="flex justify-center items-center py-20"><span className="text-gray-500 font-bold animate-pulse">Cargando catálogo...</span></div>
+              ) : clientProductsError ? (
+                <div className="text-center py-20 text-red-500 font-bold">{clientProductsError}</div>
+              ) : (
+                <Home products={clientProducts} />
+              )
+            )}
+            {view === 'catalog' && (
+              clientProductsLoading ? (
+                <div className="flex justify-center items-center py-20"><span className="text-gray-500 font-bold animate-pulse">Cargando catálogo...</span></div>
+              ) : clientProductsError ? (
+                <div className="text-center py-20 text-red-500 font-bold">{clientProductsError}</div>
+              ) : (
+                <Catalog products={clientProducts} />
+              )
+            )}
+            {view === 'product-detail' && <ProductDetail />}
+            {view === 'checkout' && <Checkout />}
+            {view === 'login' && <Login />}
+            {view === 'howtobuy' && <HowToBuy />}
+            {view === 'contact' && <Contact />}
+            {view === 'myorders' && <MyOrders />}
+            {view === 'admin' && (userRole === 'admin' || userRole === 'superadmin') && (
+              <Suspense fallback={
+                <div className="fixed inset-0 bg-gray-50 flex flex-col items-center justify-center font-jakarta">
+                  <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-zinc-950 animate-spin mb-4" />
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Cargando Panel...</span>
+                </div>
+              }>
+                <AdminLayout
+                  products={adminProducts}
+                  updateProductStock={updateProductStock}
+                  updateProductPrice={updateProductPrice}
+                  addProduct={addProduct}
+                  editProduct={editProduct}
+                  deleteProduct={deleteProduct}
+                />
+              </Suspense>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* 3. Footer (Hidden in admin view for clean desktop appearance) */}
@@ -119,119 +134,10 @@ function AppContent() {
       {/* 4. Sliding Cart Drawer Overlay */}
       {view !== 'admin' && <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />}
 
-      {/* 5. Product Details Modal */}
-      <Modal
-        isOpen={!!selectedProduct}
-        onClose={() => {
-          setSelectedProduct(null);
-          setModalQty(1);
-        }}
-        title="Detalles del Producto"
-      >
-        {selectedProduct && (
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Left Image column */}
-            <div className="md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0">
-              <img
-                src={selectedProduct.image}
-                alt={selectedProduct.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
+      {/* 5. Customer Auth Modal */}
+      {view !== 'admin' && <AuthModal />}
 
-            {/* Right Information column */}
-            <div className="flex-1 flex flex-col justify-between">
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <Badge variant="info">{selectedProduct.category}</Badge>
-                  {selectedProduct.stock === 0 ? (
-                    <Badge variant="danger">Agotado</Badge>
-                  ) : selectedProduct.stock <= 5 ? (
-                    <Badge variant="warning">¡Último stock!</Badge>
-                  ) : (
-                    <Badge variant="success">Disponible</Badge>
-                  )}
-                </div>
-                
-                <h4 className="text-xl font-bold text-gray-900 mb-2">{selectedProduct.name}</h4>
-                
-                {/* Rating */}
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className={`w-4 h-4 ${i < Math.floor(selectedProduct.rating || 5) ? 'text-yellow-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                  <span className="text-xs font-semibold text-gray-500 ml-1">
-                    {selectedProduct.rating || '5.0'} ({selectedProduct.reviewsCount || 0} valoraciones)
-                  </span>
-                </div>
 
-                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  {selectedProduct.description || 'Este producto no cuenta con descripción adicional por el momento.'}
-                </p>
-              </div>
-
-              {/* Price and Cart controls */}
-              <div className="border-t border-gray-100 pt-4 mt-auto">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-400 text-xs font-medium">Precio unitario</span>
-                  <span className="text-2xl font-black text-green-600">
-                    ${selectedProduct.price.toFixed(2)}
-                  </span>
-                </div>
-
-                {selectedProduct.stock > 0 ? (
-                  <div className="flex gap-3">
-                    {/* Qty Selector */}
-                    <div className="flex items-center border border-gray-200 rounded-full px-3 py-1 bg-gray-50 gap-4">
-                      <button
-                        onClick={() => setModalQty(Math.max(1, modalQty - 1))}
-                        className="text-gray-500 hover:text-black font-extrabold text-base focus:outline-none"
-                      >
-                        -
-                      </button>
-                      <span className="text-sm font-bold text-gray-900 w-4 text-center">{modalQty}</span>
-                      <button
-                        onClick={() => setModalQty(Math.min(selectedProduct.stock, modalQty + 1))}
-                        disabled={modalQty >= selectedProduct.stock}
-                        className={`font-extrabold text-base focus:outline-none ${
-                          modalQty >= selectedProduct.stock ? 'text-gray-300' : 'text-gray-500 hover:text-black'
-                        }`}
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <Button onClick={handleModalAddToCart} className="flex-1 py-3 text-xs">
-                      Añadir al Carrito (${(selectedProduct.price * modalQty).toFixed(2)})
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="w-full text-center py-3 bg-red-50 text-red-600 font-bold rounded-2xl text-sm border border-red-100">
-                    Producto Agotado temporalmente
-                  </div>
-                )}
-
-                {/* WhatsApp consultation button */}
-                <div className="mt-3">
-                  <a
-                    href={`https://wa.me/5493804918672?text=${encodeURIComponent(`¡Hola! Me gustaría realizar una consulta sobre el producto: *${selectedProduct.name}* (Precio: $${selectedProduct.price.toFixed(2)})`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 rounded-xl border border-green-500 text-green-600 hover:bg-green-50 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
-                  >
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                      <path d="M12.012 2c-5.506 0-9.988 4.493-9.988 10 0 1.758.455 3.414 1.259 4.867l-1.283 4.697 4.81-1.26c1.393.754 2.977 1.189 4.671 1.189 5.506 0 10.02-4.494 10.02-10 0-5.507-4.514-10-10.02-10zm0 1.562c4.656 0 8.447 3.791 8.447 8.438 0 4.647-3.79 8.438-8.447 8.438-1.579 0-3.041-.439-4.296-1.2l-.307-.183-2.836.743.758-2.775-.2-.319a8.337 8.337 0 0 1-1.319-4.704c0-4.647 3.791-8.438 8.447-8.438zm-3.774 4.394c-.21 0-.422.046-.612.164-.268.163-.564.493-.564 1.127 0 .848.43 1.696.643 1.992.214.296 2.062 3.149 5.012 4.307.701.276 1.25.441 1.677.575.706.223 1.349.191 1.859.117.568-.083 1.748-.713 1.996-1.401.248-.688.248-1.277.174-1.401-.074-.124-.272-.197-.568-.346-.298-.148-1.748-.862-2.02-.961-.272-.099-.47-.148-.668.148-.198.297-.767.962-.94 1.16-.174.197-.347.222-.643.074-.298-.148-1.255-.462-2.39-1.472-.882-.787-1.478-1.759-1.65-2.055-.174-.297-.019-.457.13-.605.133-.133.297-.346.446-.519.148-.173.197-.296.297-.494.099-.197.049-.37-.025-.519-.074-.148-.668-1.605-.915-2.2-.241-.58-.521-.502-.714-.512z"/>
-                    </svg>
-                    Consultar por WhatsApp
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
 
       {/* 6. Floating WhatsApp Button */}
       {view !== 'admin' && <FloatingWhatsApp />}

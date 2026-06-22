@@ -3,7 +3,7 @@ import { useCart } from '../../context/CartContext';
 import { Lock, LogOut, ShoppingCart, Search, User, Menu, X, Globe } from 'lucide-react';
 
 export default function Navbar({ onCartOpen }) {
-  const { cartCount, view, setView, userRole, logoutAdmin } = useCart();
+  const { cartCount, view, setView, userRole, logoutAdmin, user, setIsAuthModalOpen, setAuthModalTab } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [activeSection, setActiveSection] = useState('inicio');
@@ -188,6 +188,29 @@ export default function Navbar({ onCartOpen }) {
           >
             <Search className="w-5 h-5" />
           </button>
+
+          {/* User Profile / Login Icon */}
+          <button
+            onClick={() => {
+              if (user) {
+                setAuthModalTab('profile');
+              } else {
+                setAuthModalTab('login');
+              }
+              setIsAuthModalOpen(true);
+            }}
+            className={`p-2 rounded-full border transition-all flex items-center justify-center cursor-pointer relative ${
+              user 
+                ? 'bg-gray-50 border-gray-200 text-gray-800 hover:border-zinc-800 hover:text-black' 
+                : 'bg-white border-transparent text-gray-500 hover:border-gray-200 hover:text-black'
+            }`}
+            title={user ? 'Mi Cuenta' : 'Iniciar Sesión / Registrarse'}
+          >
+            <User className="w-5 h-5" />
+            {user && (
+              <span className="absolute bottom-0.5 right-0.5 w-2 h-2 bg-green-500 rounded-full border border-white" />
+            )}
+          </button>
  
           {/* Cart Icon */}
           <button
@@ -283,6 +306,23 @@ export default function Navbar({ onCartOpen }) {
           >
             <Search className="w-4 h-4" />
             Buscar productos
+          </button>
+
+          {/* User Profile / Auth Item on Mobile Menu */}
+          <button
+            onClick={() => {
+              if (user) {
+                setAuthModalTab('profile');
+              } else {
+                setAuthModalTab('login');
+              }
+              setIsAuthModalOpen(true);
+              setMobileMenuOpen(false);
+            }}
+            className="text-left py-2 hover:text-black transition-colors flex items-center gap-2 text-gray-500"
+          >
+            <User className="w-4 h-4" />
+            {user ? 'Mi Cuenta' : 'Iniciar Sesión / Registrarse'}
           </button>
 
           {/* Admin Login/Panel Item on Mobile Menu */}

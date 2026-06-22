@@ -39,7 +39,8 @@ export default function InventoryPanel({
       category: product.category,
       description: product.description || '',
       image: product.image,
-      activo: product.activo !== false
+      activo: product.activo !== false,
+      relevante: product.relevante === true
     });
     setImagePreview(product.image);
     setCompressionRatio(null);
@@ -56,7 +57,8 @@ export default function InventoryPanel({
       category: categories[0] || 'Maquillaje',
       description: '',
       image: '',
-      activo: true
+      activo: true,
+      relevante: false
     });
     setImagePreview('');
     setCompressionRatio(null);
@@ -69,7 +71,8 @@ export default function InventoryPanel({
     category: categories[0] || 'Maquillaje',
     description: '',
     image: '',
-    activo: true
+    activo: true,
+    relevante: false
   });
 
   const handleFileChange = async (e) => {
@@ -135,7 +138,9 @@ export default function InventoryPanel({
       stock: '',
       category: categories[0] || 'Maquillaje',
       description: '',
-      image: ''
+      image: '',
+      activo: true,
+      relevante: false
     });
     setImagePreview('');
     setCompressionRatio(null);
@@ -388,17 +393,32 @@ export default function InventoryPanel({
                   />
                 </div>
 
-                <div className="flex items-center gap-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="product-activo-checkbox"
-                    checked={newProduct.activo !== false}
-                    onChange={(e) => setNewProduct({ ...newProduct, activo: e.target.checked })}
-                    className="w-4 h-4 text-zinc-950 focus:ring-zinc-800 rounded cursor-pointer"
-                  />
-                  <label htmlFor="product-activo-checkbox" className="text-xs font-bold text-gray-800 cursor-pointer">
-                    Producto Activo (Visible en el catálogo público)
-                  </label>
+                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="product-activo-checkbox"
+                      checked={newProduct.activo !== false}
+                      onChange={(e) => setNewProduct({ ...newProduct, activo: e.target.checked })}
+                      className="w-4 h-4 text-zinc-950 focus:ring-zinc-800 rounded cursor-pointer"
+                    />
+                    <label htmlFor="product-activo-checkbox" className="text-xs font-bold text-gray-800 cursor-pointer">
+                      Producto Activo
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="product-relevante-checkbox"
+                      checked={newProduct.relevante === true}
+                      onChange={(e) => setNewProduct({ ...newProduct, relevante: e.target.checked })}
+                      className="w-4 h-4 text-zinc-950 focus:ring-zinc-800 rounded cursor-pointer"
+                    />
+                    <label htmlFor="product-relevante-checkbox" className="text-xs font-bold text-gray-800 cursor-pointer">
+                      Promoción Especial
+                    </label>
+                  </div>
                 </div>
               </div>
 
