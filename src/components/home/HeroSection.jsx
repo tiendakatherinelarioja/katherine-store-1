@@ -32,12 +32,12 @@ export default function HeroSection({ onExplore }) {
   return (
     <section className="relative w-full min-h-screen flex flex-col lg:flex-row overflow-hidden bg-alabaster">
       {/* Left Content - Editorial Text */}
-      <div className="lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 md:px-20 py-24 lg:py-0 z-20">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center lg:items-start px-8 sm:px-12 md:px-20 py-28 lg:py-0 z-20 min-h-screen lg:min-h-0">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-xl"
+          className="max-w-xl text-center lg:text-left"
         >
           <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8">
             <div className="w-10 h-[1px] bg-taupe" />
@@ -56,7 +56,7 @@ export default function HeroSection({ onExplore }) {
             Explora por nuestro catalogo la variedad de productos para vos o tu emprendimiento!.
           </motion.p>
           
-          <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-6">
+          <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center lg:justify-start gap-6">
             <Button 
               onClick={() => onExplore('Todos')}
               className="px-10 py-5 bg-charcoal text-alabaster rounded-none hover:bg-black transition-all-custom shadow-xl shadow-charcoal/10"
@@ -74,8 +74,8 @@ export default function HeroSection({ onExplore }) {
         </motion.div>
       </div>
 
-      {/* Right Content - Parallax Imagery Grid */}
-      <div className="lg:w-1/2 relative min-h-[300px] sm:min-h-[400px] lg:h-auto overflow-hidden bg-white/30">
+      {/* Right Content - Parallax Imagery Grid (oculto en móvil) */}
+      <div className="hidden lg:block lg:w-1/2 relative lg:h-auto overflow-hidden bg-white/30">
         <div className="absolute inset-0 grid grid-cols-2 gap-6 p-6 lg:p-12">
           <div className="flex flex-col gap-6">
             <motion.div 
