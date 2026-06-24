@@ -43,6 +43,7 @@ export default function AdminLayout({
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isCreateAdminOpen, setIsCreateAdminOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const {
     categories,
