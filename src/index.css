@@ -3,6 +3,13 @@
 @theme {
   --font-sans: 'Poppins', sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+
+  --color-charcoal: #1A1A1A;
+  --color-alabaster: #FAFAFA;
+  --color-taupe: #BCAAA4;
+  --color-dusty-rose: #DDBEA9;
+  --color-gold: #E8DCC4;
+
   --radius-4xl: 2rem;
   --color-soft-green: #f0f9f4;
   --color-soft-blue: #eff6ff;
@@ -10,104 +17,86 @@
   --color-soft-red: #fef2f2;
 }
 
-body {
-  font-family: var(--font-sans);
-  color: #111827;
-  background-color: #ffffff;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-charcoal);
+    background-color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-/* Custom smooth transitions for interactive states */
-.transition-all-custom {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* ---- Keyframes ---- */
+@keyframes marqueeScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Animation Keyframes */
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideInRight {
   from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-slide-in-right {
-  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  to   { transform: translateX(0); }
 }
 
 @keyframes spinSlow {
   from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  to   { transform: rotate(360deg); }
 }
 
-@keyframes bounceSlow {
-  0%, 100% {
-    transform: translateY(-8%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-  }
-  50% {
-    transform: translateY(0);
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-  }
+/* ---- Custom Utilities ---- */
+@utility animate-marquee {
+  animation: marqueeScroll 50s linear infinite;
 }
 
-.animate-spin-slow {
+@utility animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@utility animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@utility animate-slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@utility animate-spin-slow {
   animation: spinSlow 12s linear infinite;
 }
 
-.animate-bounce-slow {
-  animation: bounceSlow 3.5s infinite;
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* --- Mobile Performance & Touch Optimizations --- */
+@utility transition-all-custom {
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-/* Enable hardware-accelerated smooth momentum scrolling on iOS/Android */
-.overflow-y-auto, 
+/* ---- Mobile Perf ---- */
+.overflow-y-auto,
 .overflow-x-auto,
 main,
 aside {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Eliminate double-tap delay on mobile browsers for instant click response */
-a, 
-button, 
-input, 
-select, 
-textarea {
+a, button, input, select, textarea {
   touch-action: manipulation;
 }
 
-/* Prevent swipe pull-to-refresh when scrolling drawers or details modals */
-.overscroll-contain,
 .overflow-y-auto {
   overscroll-behavior-y: contain;
-}
-
-/* Optimize rendering for offscreen static blocks */
-.content-visibility-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 500px;
 }

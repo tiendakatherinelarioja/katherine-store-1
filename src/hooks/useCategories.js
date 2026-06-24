@@ -55,6 +55,20 @@ export function useCategories() {
 
   useEffect(() => {
     fetchCategories();
+
+    // Realtime subscription: auto-refresh when the categorias table changes
+    const channel = supabase
+      .channel('categorias-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'categorias' },
+        () => fetchCategories()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchCategories]);
 
   // Create category

@@ -22,6 +22,7 @@ import Login from './views/client/Login';
 import HowToBuy from './views/client/HowToBuy';
 import Contact from './views/client/Contact';
 import MyOrders from './views/client/MyOrders';
+import MyAccount from './views/client/MyAccount';
 import ProductDetail from './views/client/ProductDetail';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -107,6 +108,7 @@ function AppContent() {
             {view === 'howtobuy' && <HowToBuy />}
             {view === 'contact' && <Contact />}
             {view === 'myorders' && <MyOrders />}
+            {view === 'myaccount' && <MyAccount />}
             {view === 'admin' && (userRole === 'admin' || userRole === 'superadmin') && (
               <Suspense fallback={
                 <div className="fixed inset-0 bg-gray-50 flex flex-col items-center justify-center font-jakarta">

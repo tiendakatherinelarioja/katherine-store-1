@@ -1,4 +1,5 @@
 import React from 'react';
+import { Search, X } from 'lucide-react';
 
 // Helpers to map database category strings to General Category types
 const getGeneralCategory = (cat) => {
@@ -20,7 +21,7 @@ export default function ProductFilters({
 }) {
   const currentGeneral = getGeneralCategory(selectedCategory);
 
-  // Extract other database subcategories not falling under Estética or Moda
+  // Extract subcategories not falling under Estética or Moda
   const otherSubcategories = categories.filter((cat) => {
     const c = cat.toLowerCase();
     return (
@@ -36,146 +37,120 @@ export default function ProductFilters({
     );
   });
 
-  // Handle Level 1 selection
   const handleGeneralSelect = (genName) => {
-    if (genName === 'Todos') {
-      onCategoryChange('Todos');
-    } else if (genName === 'Estética') {
-      onCategoryChange('Estética');
-    } else if (genName === 'Moda') {
-      onCategoryChange('Moda');
-    } else {
-      onCategoryChange('Otros');
-    }
+    if (genName === 'Todos') onCategoryChange('Todos');
+    else if (genName === 'Estética') onCategoryChange('Estética');
+    else if (genName === 'Moda') onCategoryChange('Moda');
+    else onCategoryChange('Otros');
   };
 
+  const pillBase = 'px-4 py-2 rounded-full text-xs font-bold border transition-all duration-200 active:scale-95 cursor-pointer';
+  const pillActive = 'bg-charcoal border-charcoal text-alabaster shadow-sm';
+  const pillInactive = 'bg-white border-gray-200 text-gray-500 hover:text-charcoal hover:border-charcoal';
+
+  const subPillBase = 'px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-all active:scale-95 cursor-pointer';
+  const subPillActive = 'bg-charcoal border-charcoal text-alabaster';
+  const subPillInactive = 'bg-white border-gray-200 text-gray-500 hover:text-charcoal hover:border-charcoal';
+
   return (
-    <div className="flex flex-col gap-6 bg-gray-50/40 p-5 rounded-2xl border border-gray-200/80 mb-8 text-left">
-      
+    <div className="flex flex-col gap-5 text-left">
+
       {/* Nivel 1: Categorías Generales */}
       <div>
-        <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-          Categoría General
-        </h5>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-3">
+          Categoría
+        </p>
         <div className="flex flex-wrap gap-2">
-          {['Todos', 'Estética', 'Moda', 'Otros'].map((genCat) => {
-            const isActive = currentGeneral === genCat;
-            return (
-              <button
-                key={genCat}
-                type="button"
-                onClick={() => handleGeneralSelect(genCat)}
-                className={`px-4 py-2 rounded-full text-xs font-bold border transition-all duration-200 active:scale-95 cursor-pointer ${
-                  isActive
-                    ? 'bg-zinc-950 border-zinc-950 text-white shadow-xs'
-                    : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:bg-gray-50/50'
-                }`}
-              >
-                {genCat}
-              </button>
-            );
-          })}
+          {['Todos', 'Estética', 'Moda', 'Otros'].map((genCat) => (
+            <button
+              key={genCat}
+              type="button"
+              onClick={() => handleGeneralSelect(genCat)}
+              className={`${pillBase} ${currentGeneral === genCat ? pillActive : pillInactive}`}
+            >
+              {genCat}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Nivel 2: Subcategorías (Mostrado condicionalmente) */}
+      {/* Nivel 2: Subcategorías */}
       {currentGeneral !== 'Todos' && (
-        <div className="bg-gray-100/40 p-3 rounded-2xl border border-gray-200/50 space-y-2.5 animate-fade-in">
-          <h6 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest pl-1">
-            Subcategorías de {currentGeneral}
-          </h6>
-          <div className="flex flex-wrap gap-1.5">
-            {/* General selector inside hierarchy */}
-            <button
-              type="button"
-              onClick={() => onCategoryChange(currentGeneral)}
-              className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-all active:scale-95 cursor-pointer ${
-                selectedCategory.toLowerCase() === currentGeneral.toLowerCase()
-                  ? 'bg-zinc-800 border-zinc-800 text-white'
-                  : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:bg-gray-50/50'
-              }`}
-            >
-              Todos en {currentGeneral}
-            </button>
+        <div className="flex flex-wrap gap-2 pl-1 animate-fade-in border-l-2 border-gray-100 ml-1">
+          <button
+            type="button"
+            onClick={() => onCategoryChange(currentGeneral)}
+            className={`${subPillBase} ${
+              selectedCategory.toLowerCase() === currentGeneral.toLowerCase()
+                ? subPillActive
+                : subPillInactive
+            }`}
+          >
+            Todos en {currentGeneral}
+          </button>
 
-            {/* Subcategories list */}
-            {currentGeneral === 'Estética' &&
-              ['Maquillaje', 'Manicura'].map((sub) => {
-                const isSelected = selectedCategory.toLowerCase() === sub.toLowerCase();
-                return (
-                  <button
-                    key={sub}
-                    type="button"
-                    onClick={() => onCategoryChange(sub)}
-                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-all active:scale-95 cursor-pointer ${
-                      isSelected
-                        ? 'bg-zinc-800 border-zinc-800 text-white'
-                        : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:bg-gray-50/50'
-                    }`}
-                  >
-                    {sub}
-                  </button>
-                );
-              })}
+          {currentGeneral === 'Estética' &&
+            ['Maquillaje', 'Manicura'].map((sub) => (
+              <button
+                key={sub}
+                type="button"
+                onClick={() => onCategoryChange(sub)}
+                className={`${subPillBase} ${
+                  selectedCategory.toLowerCase() === sub.toLowerCase() ? subPillActive : subPillInactive
+                }`}
+              >
+                {sub}
+              </button>
+            ))}
 
-            {currentGeneral === 'Moda' &&
-              ['Ropa', 'Accesorios'].map((sub) => {
-                const isSelected = selectedCategory.toLowerCase() === sub.toLowerCase();
-                return (
-                  <button
-                    key={sub}
-                    type="button"
-                    onClick={() => onCategoryChange(sub)}
-                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-all active:scale-95 cursor-pointer ${
-                      isSelected
-                        ? 'bg-zinc-800 border-zinc-800 text-white'
-                        : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:bg-gray-50/50'
-                    }`}
-                  >
-                    {sub}
-                  </button>
-                );
-              })}
+          {currentGeneral === 'Moda' &&
+            ['Ropa', 'Accesorios'].map((sub) => (
+              <button
+                key={sub}
+                type="button"
+                onClick={() => onCategoryChange(sub)}
+                className={`${subPillBase} ${
+                  selectedCategory.toLowerCase() === sub.toLowerCase() ? subPillActive : subPillInactive
+                }`}
+              >
+                {sub}
+              </button>
+            ))}
 
-            {currentGeneral === 'Otros' &&
-              otherSubcategories.map((sub) => {
-                const isSelected = selectedCategory.toLowerCase() === sub.toLowerCase();
-                return (
-                  <button
-                    key={sub}
-                    type="button"
-                    onClick={() => onCategoryChange(sub)}
-                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-all active:scale-95 cursor-pointer ${
-                      isSelected
-                        ? 'bg-zinc-800 border-zinc-800 text-white'
-                        : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:bg-gray-50/50'
-                    }`}
-                  >
-                    {sub}
-                  </button>
-                );
-              })}
-          </div>
+          {currentGeneral === 'Otros' &&
+            otherSubcategories.map((sub) => (
+              <button
+                key={sub}
+                type="button"
+                onClick={() => onCategoryChange(sub)}
+                className={`${subPillBase} ${
+                  selectedCategory.toLowerCase() === sub.toLowerCase() ? subPillActive : subPillInactive
+                }`}
+              >
+                {sub}
+              </button>
+            ))}
         </div>
       )}
 
-      {/* Panel de Búsqueda y Ordenamiento */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Search sin lupa */}
+      {/* Search + Sort */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Search */}
         <div className="md:col-span-2 relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Buscar por nombre o descripción..."
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-800 transition-all placeholder-gray-400 font-medium text-gray-800"
+            placeholder="Buscar producto..."
+            className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all placeholder-gray-400 font-medium text-charcoal"
           />
           {searchTerm && (
             <button
               onClick={() => onSearchChange('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black text-xs font-bold cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-charcoal transition-colors cursor-pointer"
             >
-              Limpiar
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -185,15 +160,15 @@ export default function ProductFilters({
           <select
             value={sortBy}
             onChange={(e) => onSortByChange(e.target.value)}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-800 transition-all appearance-none cursor-pointer text-gray-700 font-medium"
+            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all appearance-none cursor-pointer text-gray-600 font-medium"
           >
-            <option value="relevance">Ordenar por: Relevancia</option>
-            <option value="price-asc">Precio: de Menor a Mayor</option>
-            <option value="price-desc">Precio: de Mayor a Menor</option>
-            <option value="rating">Popularidad (Estrellas)</option>
+            <option value="relevance">Relevancia</option>
+            <option value="price-asc">Precio: menor a mayor</option>
+            <option value="price-desc">Precio: mayor a menor</option>
+            <option value="rating">Popularidad</option>
           </select>
           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
           </div>

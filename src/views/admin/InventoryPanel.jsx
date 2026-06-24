@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
@@ -26,9 +26,16 @@ export default function InventoryPanel({
   const [deletingProduct, setDeletingProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
 
-  // Pagination states
+  // Category filter + Pagination states
+  const [categoryFilter, setCategoryFilter] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Reset page when filter changes
+  const handleCategoryFilter = (cat) => {
+    setCategoryFilter(cat);
+    setCurrentPage(1);
+  };
 
   const handleStartEdit = (product) => {
     setEditingProduct(product);
@@ -148,10 +155,17 @@ export default function InventoryPanel({
     setIsModalOpen(false);
   };
 
-  // Pagination calculations
-  const totalPages = Math.ceil(products.length / itemsPerPage);
+  // Filter by category, then paginate
+  const filteredProducts = useMemo(() => {
+    if (categoryFilter === 'Todos') return products;
+    return products.filter(
+      (p) => (p.category || '').toLowerCase() === categoryFilter.toLowerCase()
+    );
+  }, [products, categoryFilter]);
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedProducts = products.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="flex flex-col lg:flex-row h-full gap-6">
@@ -160,7 +174,7 @@ export default function InventoryPanel({
       <div className={`flex-1 bg-white p-4 md:p-6 rounded-xl border border-gray-200/80 shadow-xs h-full flex flex-col overflow-hidden ${isModalOpen ? 'hidden lg:flex' : 'flex'}`}>
         
         {/* Header and Add button */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Control de Inventario</h2>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -175,6 +189,27 @@ export default function InventoryPanel({
               Añadir Producto
             </Button>
           )}
+        </div>
+
+        {/* Category filter pills */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {['Todos', ...categories].map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => handleCategoryFilter(cat)}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                categoryFilter === cat
+                  ? 'bg-zinc-900 border-zinc-900 text-white'
+                  : 'bg-white border-gray-200 text-gray-500 hover:border-zinc-700 hover:text-zinc-900'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+          <span className="ml-auto text-[10px] text-gray-400 font-bold self-center uppercase tracking-wider">
+            {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
+          </span>
         </div>
 
       {/* Grid inventory list */}
@@ -209,7 +244,6 @@ export default function InventoryPanel({
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-gray-400">ID: {product.id}</span>
                   </div>
                 </td>
 
@@ -292,9 +326,9 @@ export default function InventoryPanel({
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-4 shrink-0">
           <span className="text-xxs text-gray-400 font-bold uppercase tracking-wider">
-            Página {currentPage} de {totalPages} ({products.length} productos)
+            Página {currentPage} de {totalPages} · {startIndex + 1}–{Math.min(startIndex + itemsPerPage, filteredProducts.length)} de {filteredProducts.length}
           </span>
-          <div className="flex gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
@@ -307,6 +341,20 @@ export default function InventoryPanel({
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => setCurrentPage(page)}
+                className={`w-7 h-7 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                  page === currentPage
+                    ? 'bg-zinc-900 text-white border-zinc-900'
+                    : 'bg-white border-gray-200 text-gray-500 hover:border-zinc-700'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
             <button
               type="button"
               onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
