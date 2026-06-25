@@ -11,7 +11,7 @@ export default function Catalog({ products }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
   const [showFilters, setShowFilters] = useState(true);
-  const { categories: dbCategories } = useCategories();
+  const { categoriesList, subcategoriesList } = useCategories();
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,36 +22,18 @@ export default function Catalog({ products }) {
     setCurrentPage(1);
   }, [categoryFilter, searchTerm]);
 
-  // Load categories dynamically from DB hook
-  const categories = useMemo(() => {
-    return ['Todos', ...dbCategories];
-  }, [dbCategories]);
-
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     let result = products.filter((p) => p.activo !== false);
 
-    // Filter by Category
+    // Filter by Category or Subcategory
     if (categoryFilter !== 'Todos') {
       const lowerFilter = categoryFilter.toLowerCase();
-      if (lowerFilter === 'estética') {
-        result = result.filter((p) => {
-          const cat = (p.category || '').toLowerCase();
-          return cat === 'maquillaje' || cat === 'manicura';
-        });
-      } else if (lowerFilter === 'moda' || lowerFilter === 'ropa y accesorios') {
-        result = result.filter((p) => {
-          const cat = (p.category || '').toLowerCase();
-          return cat === 'ropa' || cat === 'accesorios';
-        });
-      } else if (lowerFilter === 'otros') {
-        result = result.filter((p) => {
-          const cat = (p.category || '').toLowerCase();
-          return cat !== 'maquillaje' && cat !== 'manicura' && cat !== 'ropa' && cat !== 'accesorios';
-        });
-      } else {
-        result = result.filter((p) => (p.category || '').toLowerCase() === lowerFilter);
-      }
+      result = result.filter((p) => {
+        const productCat = (p.category || '').toLowerCase();
+        const productSub = (p.subcategory || '').toLowerCase();
+        return productCat === lowerFilter || productSub === lowerFilter;
+      });
     }
 
     // Filter by Search Term
@@ -151,7 +133,8 @@ export default function Catalog({ products }) {
               onSearchChange={setSearchTerm}
               sortBy={sortBy}
               onSortByChange={setSortBy}
-              categories={categories}
+              categoriesList={categoriesList}
+              subcategoriesList={subcategoriesList}
             />
           </motion.div>
         )}

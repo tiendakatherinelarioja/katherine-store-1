@@ -6,6 +6,7 @@ const DEFAULT_CATEGORIES = ['Maquillaje', 'Manicura', 'Ropa', 'Accesorios', 'Ter
 export function useCategories() {
   const [categoriesList, setCategoriesList] = useState([]); // [{ id, nombre }]
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES); // ['Maquillaje', ...]
+  const [subcategoriesList, setSubcategoriesList] = useState([]); // [{ id, nombre, categoria_id }]
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -42,12 +43,35 @@ export function useCategories() {
         setCategoriesList([]);
         setCategories([]);
       }
+
+      // Fetch subcategories
+      const { data: subData, error: subErr } = await supabase
+        .from('subcategorias')
+        .select('*')
+        .order('nombre', { ascending: true });
+
+      if (subErr) {
+        if (subErr.code === 'PGRST116' || subErr.message.includes('relation') || subErr.message.includes('does not exist')) {
+          console.warn('La tabla "subcategorias" no existe en la BD. Usando subcategorías vacías.');
+          setSubcategoriesList([]);
+        } else {
+          throw subErr;
+        }
+      } else {
+        const formattedSubs = (subData || []).map((sub) => ({
+          id: sub.id,
+          nombre: sub.nombre.charAt(0).toUpperCase() + sub.nombre.slice(1),
+          categoria_id: sub.categoria_id
+        }));
+        setSubcategoriesList(formattedSubs);
+      }
     } catch (err) {
       console.error('Error al cargar categorias:', err);
       setError(err.message || 'Error al conectar con la tabla de categorías.');
       // Fallback
       setCategories(DEFAULT_CATEGORIES);
       setCategoriesList(DEFAULT_CATEGORIES.map((cat, idx) => ({ id: idx.toString(), nombre: cat })));
+      setSubcategoriesList([]);
     } finally {
       setLoading(false);
     }
@@ -55,20 +79,6 @@ export function useCategories() {
 
   useEffect(() => {
     fetchCategories();
-
-    // Realtime subscription: auto-refresh when the categorias table changes
-    const channel = supabase
-      .channel('categorias-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'categorias' },
-        () => fetchCategories()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [fetchCategories]);
 
   // Create category
@@ -158,14 +168,100 @@ export function useCategories() {
     }
   };
 
+  // Create subcategory
+  const addSubcategory = async (name, categoryId) => {
+    try {
+      const cleanName = name.trim();
+      if (!cleanName || !categoryId) return;
+
+      const capitalized = cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+
+      const { error: insertErr } = await supabase
+        .from('subcategorias')
+        .insert([{ nombre: capitalized, categoria_id: categoryId }]);
+
+      if (insertErr) throw insertErr;
+
+      await fetchCategories();
+    } catch (err) {
+      console.error('Error al agregar subcategoría:', err);
+      alert('Error en base de datos al guardar subcategoría: ' + err.message);
+    }
+  };
+
+  // Update/Rename subcategory
+  const updateSubcategory = async (id, newName) => {
+    try {
+      const cleanNew = newName.trim();
+      if (!id || !cleanNew) return;
+
+      const capitalizedNew = cleanNew.charAt(0).toUpperCase() + cleanNew.slice(1).toLowerCase();
+
+      const { error: updateErr } = await supabase
+        .from('subcategorias')
+        .update({ nombre: capitalizedNew })
+        .eq('id', id);
+
+      if (updateErr) throw updateErr;
+
+      await fetchCategories();
+    } catch (err) {
+      console.error('Error al renombrar subcategoría:', err);
+      alert('Error al renombrar subcategoría: ' + err.message);
+    }
+  };
+
+  // Delete subcategory
+  const deleteSubcategory = async (id) => {
+    try {
+      if (!id) return;
+
+      // 1. Fetch the subcategory name to update affected products
+      const { data: subInfo } = await supabase
+        .from('subcategorias')
+        .select('nombre')
+        .eq('id', id)
+        .single();
+
+      // 2. Delete from subcategories
+      const { error: deleteErr } = await supabase
+        .from('subcategorias')
+        .delete()
+        .eq('id', id);
+
+      if (deleteErr) throw deleteErr;
+
+      // 3. Clear subcategory on affected products
+      if (subInfo && subInfo.nombre) {
+        const { error: productsErr } = await supabase
+          .from('productos')
+          .update({ subcategoria: null })
+          .eq('subcategoria', subInfo.nombre.toLowerCase());
+
+        if (productsErr) {
+          console.warn('Advertencia al desvincular productos de subcategoría eliminada:', productsErr.message);
+        }
+      }
+
+      await fetchCategories();
+    } catch (err) {
+      console.error('Error al eliminar subcategoría:', err);
+      alert('Error al eliminar subcategoría: ' + err.message);
+    }
+  };
+
   return {
     categories,
     categoriesList,
+    subcategoriesList,
     loading,
     error,
     refreshCategories: fetchCategories,
     addCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    addSubcategory,
+    updateSubcategory,
+    deleteSubcategory
   };
 }

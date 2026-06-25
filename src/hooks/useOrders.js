@@ -3,7 +3,7 @@ import { supabase } from '../services/supabaseClient';
 import { useCart } from '../context/CartContext';
 import { sendEmailNotification, formatOrderEmailHtml } from '../services/emailService';
 
-export function useOrders() {
+export function useOrders({ subscribeRealtime = false } = {}) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,11 +23,11 @@ export function useOrders() {
 
     return {
       id: o.id,
-      cliente: o.cliente_nombre,
+      cliente: o.cliente_apellido ? `${o.cliente_nombre} ${o.cliente_apellido}` : o.cliente_nombre,
       telefono: o.cliente_telefono,
       email: o.cliente_email,
       direccion: o.direccion_fisica || o.direccion,
-      metodoPago: o.metodo_pago,
+      metodoPago: o.metodo_pago === 'efectivo_retiro' ? 'efectivo' : o.metodo_pago,
       metodoEnvio: o.metodo_envio,
       estado: o.estado,
       fecha: new Date(o.created_at).toLocaleString(),
@@ -42,7 +42,9 @@ export function useOrders() {
       setError(null);
       const { data, error: fetchErr } = await supabase
         .from('vista_pedidos_completos')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (fetchErr) throw fetchErr;
 
@@ -65,10 +67,11 @@ export function useOrders() {
       // Structure data as required by Postgres JSONB
       const cliente_info = {
         nombre: clienteInfo.nombre,
+        apellido: clienteInfo.apellido,
         telefono: clienteInfo.telefono,
         email: clienteInfo.email || null,
         direccion: clienteInfo.metodoEnvio === 'envio' ? clienteInfo.direccion : 'Retiro en local',
-        metodo_pago: clienteInfo.metodoPago,
+        metodo_pago: clienteInfo.metodoPago === 'efectivo' ? 'efectivo_retiro' : clienteInfo.metodoPago,
         metodo_envio: clienteInfo.metodoEnvio,
         cupon_codigo: clienteInfo.cupon_codigo || null,
         descuento: clienteInfo.descuento || 0,
@@ -202,6 +205,8 @@ export function useOrders() {
 
   // Realtime changes listener for Admin Dashboard
   useEffect(() => {
+    if (!subscribeRealtime) return;
+
     const channel = supabase
       .channel('pedidos-updates')
       .on(
@@ -236,7 +241,7 @@ export function useOrders() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [normalizeOrder]);
+  }, [normalizeOrder, subscribeRealtime]);
 
   return {
     orders,

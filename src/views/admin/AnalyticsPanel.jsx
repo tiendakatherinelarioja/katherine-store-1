@@ -6,14 +6,13 @@ import {
   ShoppingBag,
   BarChart2,
   DollarSign,
-  AlertTriangle,
   Package,
   FileSpreadsheet,
-  UserPlus,
-  Users
+  RefreshCw,
+  Layers
 } from 'lucide-react';
 
-export default function AnalyticsPanel({ products, onTabChange, onCreateAdminClick }) {
+export default function AnalyticsPanel({ products, onTabChange }) {
   const { orders, fetchOrders } = useOrders();
   const { userRole } = useCart();
   const [stats, setStats] = useState({
@@ -88,7 +87,7 @@ export default function AnalyticsPanel({ products, onTabChange, onCreateAdminCli
       {/* Sección de Accesos Rápidos */}
       <div className="bg-white p-6 rounded-xl border border-gray-200/80 shadow-xs">
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Accesos Rápidos</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           
           {/* Card 1: Inventario */}
           <button
@@ -113,28 +112,6 @@ export default function AnalyticsPanel({ products, onTabChange, onCreateAdminCli
             <span className="font-bold text-sm text-gray-900 group-hover:text-black transition-colors">Gestión de Pedidos</span>
             <span className="text-xs text-gray-500 mt-1.5 leading-relaxed">Ver órdenes pendientes, cambiar estados y coordinar WhatsApp.</span>
           </button>
-
-          {/* Card 3: Crear Admin (Only for superadmin) */}
-          {userRole === 'superadmin' ? (
-            <button
-              onClick={onCreateAdminClick}
-              className="flex flex-col text-left p-5 border border-gray-150 hover:border-zinc-300 hover:bg-gray-50/30 rounded-xl hover:-translate-y-0.5 hover:shadow-sm active:scale-98 transition-all duration-300 group cursor-pointer"
-            >
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-3.5 text-emerald-600 transition-all group-hover:scale-105">
-                <UserPlus className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-sm text-gray-900 group-hover:text-black transition-colors">Registrar Administrador</span>
-              <span className="text-xs text-gray-500 mt-1.5 leading-relaxed">Crear credenciales para un nuevo usuario administrador.</span>
-            </button>
-          ) : (
-            <div className="flex flex-col text-left p-5 border border-gray-150 bg-gray-50/30 rounded-xl opacity-60">
-              <div className="w-10 h-10 rounded-xl bg-gray-200 border border-gray-350 flex items-center justify-center mb-3.5 text-gray-500">
-                <Users className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-sm text-gray-500">Usuarios del Sistema</span>
-              <span className="text-xs text-gray-500 mt-1.5 leading-relaxed">Función restringida. Solo disponible para rol superadmin.</span>
-            </div>
-          )}
 
         </div>
       </div>

@@ -41,24 +41,23 @@ export default function AdminLayout({
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
-  const [isCreateAdminOpen, setIsCreateAdminOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
 
   const {
     categories,
     categoriesList,
+    subcategoriesList,
     loading: loadingCategories,
     addCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    addSubcategory,
+    updateSubcategory,
+    deleteSubcategory
   } = useCategories();
 
-  // States for user creation
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [createAdminLoading, setCreateAdminLoading] = useState(false);
-  const [createAdminStatus, setCreateAdminStatus] = useState(null); // { type: 'success' | 'error', message: string } | null
+
 
   const toggleDropdown = (menu) => {
     if (openDropdown === menu) {
@@ -73,50 +72,7 @@ export default function AdminLayout({
     setOpenDropdown(null);
   };
 
-  const handleCreateAdmin = async (e) => {
-    e.preventDefault();
-    if (!adminEmail.trim() || !adminPassword) {
-      setCreateAdminStatus({
-        type: 'error',
-        message: 'Por favor, completa todos los campos.'
-      });
-      return;
-    }
-    if (adminPassword.length < 6) {
-      setCreateAdminStatus({
-        type: 'error',
-        message: 'La contraseña debe tener al menos 6 caracteres.'
-      });
-      return;
-    }
 
-    setCreateAdminLoading(true);
-    setCreateAdminStatus(null);
-
-    try {
-      const { data, error } = await supabase.rpc('crear_usuario_admin', {
-        new_email: adminEmail.trim(),
-        new_password: adminPassword
-      });
-
-      if (error) throw error;
-
-      setCreateAdminStatus({
-        type: 'success',
-        message: 'El usuario administrador ha sido creado exitosamente.'
-      });
-      setAdminEmail('');
-      setAdminPassword('');
-    } catch (err) {
-      console.error('Error al crear administrador:', err);
-      setCreateAdminStatus({
-        type: 'error',
-        message: err.message || 'Error al intentar crear el usuario administrador.'
-      });
-    } finally {
-      setCreateAdminLoading(false);
-    }
-  };
 
   return (
     <div className="fixed inset-0 w-screen h-screen z-50 bg-gray-100/60 flex flex-col md:flex-row font-jakarta overflow-hidden">
@@ -349,6 +305,8 @@ export default function AdminLayout({
             isAddProductOpen={isAddProductOpen}
             setIsAddProductOpen={setIsAddProductOpen}
             categories={categories}
+            categoriesList={categoriesList}
+            subcategoriesList={subcategoriesList}
           />
         )}
         
@@ -356,7 +314,6 @@ export default function AdminLayout({
           <AnalyticsPanel
             products={products}
             onTabChange={handleMenuSelection}
-            onCreateAdminClick={() => setIsCreateAdminOpen(true)}
           />
         )}
 
@@ -365,122 +322,19 @@ export default function AdminLayout({
             products={products}
             categories={categories}
             categoriesList={categoriesList}
+            subcategoriesList={subcategoriesList}
             loadingCategories={loadingCategories}
             addCategory={addCategory}
             updateCategory={updateCategory}
             deleteCategory={deleteCategory}
+            addSubcategory={addSubcategory}
+            updateSubcategory={updateSubcategory}
+            deleteSubcategory={deleteSubcategory}
           />
         )}
       </main>
 
-      {/* 3. Modal: Crear Administrador (Only for superadmin) */}
-      {isCreateAdminOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-md shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-scale-up">
-            
-            {/* Modal Header */}
-            <div className="bg-gray-900 text-white px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-blue-400" />
-                <h3 className="font-bold text-sm uppercase tracking-wide">Crear Nuevo Administrador</h3>
-              </div>
-              <button
-                onClick={() => {
-                  setIsCreateAdminOpen(false);
-                  setCreateAdminStatus(null);
-                }}
-                className="p-1 rounded-sm hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Modal Body / Form */}
-            <form onSubmit={handleCreateAdmin} className="p-6 space-y-4">
-              
-              {createAdminStatus && (
-                <div
-                  className={`p-4 rounded-md flex items-start gap-3 text-xs font-semibold ${
-                    createAdminStatus.type === 'success'
-                      ? 'bg-green-50 text-green-800 border border-green-100'
-                      : 'bg-red-50 text-red-800 border border-red-100'
-                  }`}
-                >
-                  {createAdminStatus.type === 'success' ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-                  )}
-                  <span>{createAdminStatus.message}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                  Correo Electrónico
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="ejemplo@katherine.com"
-                  value={adminEmail}
-                  onChange={(e) => setAdminEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  disabled={createAdminLoading}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                  Contraseña Temporal
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Mínimo 6 caracteres"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  disabled={createAdminLoading}
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsCreateAdminOpen(false);
-                    setCreateAdminStatus(null);
-                  }}
-                  className="px-4 py-2.5 rounded-md border border-gray-200 hover:bg-gray-50 text-xs font-bold text-gray-600 transition-colors"
-                  disabled={createAdminLoading}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={createAdminLoading}
-                  className="px-5 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-blue-600/20 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {createAdminLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Creando...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4" />
-                      Crear Admin
-                    </>
-                  )}
-                </button>
-              </div>
-
-            </form>
-
-          </div>
-        </div>
-      )}
 
     </div>
   );

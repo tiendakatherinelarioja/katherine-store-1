@@ -66,7 +66,7 @@ export default function MyOrders() {
       telefono: o.cliente_telefono,
       email: o.cliente_email,
       direccion: o.direccion_fisica || o.direccion,
-      metodoPago: o.metodo_pago,
+      metodoPago: o.metodo_pago === 'efectivo_retiro' ? 'efectivo' : o.metodo_pago,
       metodoEnvio: o.metodo_envio,
       estado: o.estado || 'pendiente',
       fecha: new Date(o.created_at).toLocaleDateString(),

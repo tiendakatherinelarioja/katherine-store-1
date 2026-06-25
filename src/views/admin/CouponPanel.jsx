@@ -4,6 +4,7 @@ import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 import { Tag, Plus, Trash2, Ticket, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCoupons } from '../../hooks/useCoupons';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function CouponPanel() {
   const { coupons, loading, addCoupon, deleteCoupon } = useCoupons();
@@ -216,34 +217,16 @@ export default function CouponPanel() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {deletingId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl border border-gray-250 shadow-2xl max-w-sm w-full p-6 space-y-4">
-            <div className="flex items-center gap-2 text-red-650">
-              <Trash2 className="w-5 h-5 shrink-0 text-red-600" />
-              <h4 className="font-bold text-sm uppercase tracking-wide">¿Eliminar Cupón?</h4>
-            </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              ¿Estás seguro de que deseas eliminar este cupón? Los clientes ya no podrán usarlo en la tienda.
-            </p>
-            <div className="flex gap-3 pt-2">
-              <Button
-                variant="outline"
-                className="flex-1 py-2 text-xs rounded-md"
-                onClick={() => setDeletingId(null)}
-              >
-                Cancelar
-              </Button>
-              <button
-                className="flex-1 py-2 text-xs bg-red-600 text-white font-bold rounded-md hover:bg-red-700 transition-colors"
-                onClick={() => handleDelete(deletingId)}
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        onConfirm={() => handleDelete(deletingId)}
+        title="¿Eliminar Cupón?"
+        description="¿Estás seguro de que deseas eliminar este cupón? Los clientes ya no podrán usarlo en la tienda."
+        type="danger"
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
 
     </div>
   );

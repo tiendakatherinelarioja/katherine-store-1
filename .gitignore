@@ -26,3 +26,4 @@ dist-ssr
 .env
 scratch/
 template-design-eccomerce/
+.agents

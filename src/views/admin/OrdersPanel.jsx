@@ -3,9 +3,10 @@ import { useOrders } from '../../hooks/useOrders';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Zap, Check, X, PhoneCall, Printer, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function OrdersPanel() {
-  const { orders, loading, error, fetchOrders, updateOrderStatus } = useOrders();
+  const { orders, loading, error, fetchOrders, updateOrderStatus } = useOrders({ subscribeRealtime: true });
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [confirmCancelId, setConfirmCancelId] = useState(null);
 
@@ -364,42 +365,20 @@ export default function OrdersPanel() {
             <span>Selecciona un pedido de la lista para ver su información completa y gestionarla.</span>
           </div>
         )}
+        <ConfirmDialog
+          isOpen={!!confirmCancelId}
+          onClose={() => setConfirmCancelId(null)}
+          onConfirm={() => {
+            updateOrderStatus(confirmCancelId, 'cancelado');
+            setConfirmCancelId(null);
+          }}
+          title="¿Rechazar Pedido?"
+          description="¿Estás seguro de que deseas rechazar este pedido? Esto marcará la orden como cancelada de forma permanente."
+          type="danger"
+          confirmText="Rechazar"
+          cancelText="Cancelar"
+        />
       </div>
-
-      {/* Reject Order Confirmation Modal */}
-      {confirmCancelId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-md border border-gray-200 shadow-xl max-w-sm w-full p-6 space-y-4">
-            <div className="flex items-center gap-2 text-red-650">
-              <svg className="w-5 h-5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wide">¿Rechazar Pedido?</h4>
-            </div>
-            <p className="text-xs text-gray-550 leading-relaxed">
-              ¿Estás seguro de que deseas rechazar este pedido? Esto marcará la orden como cancelada de forma permanente.
-            </p>
-            <div className="flex gap-3 pt-2">
-              <Button
-                variant="outline"
-                className="flex-1 py-2 text-xs rounded-md"
-                onClick={() => setConfirmCancelId(null)}
-              >
-                Cancelar
-              </Button>
-              <button
-                className="flex-1 py-2 text-xs bg-red-600 text-white font-bold rounded-md hover:bg-red-700 transition-colors cursor-pointer"
-                onClick={() => {
-                  updateOrderStatus(confirmCancelId, 'cancelado');
-                  setConfirmCancelId(null);
-                }}
-              >
-                Rechazar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

@@ -50,6 +50,7 @@ function AppContent() {
   } = useProducts(false);
 
   // Load admin full product list (including out-of-stock items)
+  // Se optimiza para no cargar los productos de admin si no estamos en la vista admin
   const {
     products: adminProducts,
     updateProductStock,
@@ -57,7 +58,7 @@ function AppContent() {
     addProduct,
     editProduct,
     deleteProduct
-  } = useProducts(view === 'admin');
+  } = useProducts(true, view === 'admin');
 
   const handleModalAddToCart = () => {
     if (selectedProduct && selectedProduct.stock >= modalQty) {

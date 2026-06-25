@@ -5,13 +5,14 @@ export default function Input({
   type = 'text',
   error,
   className = '',
+  helperText,
   ...props
 }) {
   const hasRounded = className.includes('rounded-');
   return (
     <div className={`flex flex-col gap-1 w-full ${className}`}>
       {label && (
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-gray-750">
           {label}
         </label>
       )}
@@ -23,6 +24,7 @@ export default function Input({
         {...props}
       />
       {error && <span className="text-xs text-red-500 mt-1">{error}</span>}
+      {helperText && !error && <span className="text-xs text-gray-450 mt-1">{helperText}</span>}
     </div>
   );
 }

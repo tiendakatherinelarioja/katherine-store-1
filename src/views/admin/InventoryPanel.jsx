@@ -4,6 +4,7 @@ import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { compressToWebP } from '../../utils/imageProcessor';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function InventoryPanel({
   products,
@@ -14,7 +15,9 @@ export default function InventoryPanel({
   deleteProduct,
   isAddProductOpen,
   setIsAddProductOpen,
-  categories = ['Maquillaje', 'Manicura', 'Ropa', 'Accesorios', 'Termos']
+  categories = ['Maquillaje', 'Manicura', 'Ropa', 'Accesorios', 'Termos'],
+  categoriesList = [],
+  subcategoriesList = []
 }) {
   // Local fallback if parameters are not passed, otherwise sync with parent
   const [localIsModalOpen, setLocalIsModalOpen] = useState(false);
@@ -44,6 +47,7 @@ export default function InventoryPanel({
       price: product.price.toString(),
       stock: product.stock.toString(),
       category: product.category,
+      subcategory: product.subcategory || '',
       description: product.description || '',
       image: product.image,
       activo: product.activo !== false,
@@ -62,6 +66,7 @@ export default function InventoryPanel({
       price: '',
       stock: '',
       category: categories[0] || 'Maquillaje',
+      subcategory: '',
       description: '',
       image: '',
       activo: true,
@@ -76,6 +81,7 @@ export default function InventoryPanel({
     price: '',
     stock: '',
     category: categories[0] || 'Maquillaje',
+    subcategory: '',
     description: '',
     image: '',
     activo: true,
@@ -119,6 +125,17 @@ export default function InventoryPanel({
     }
   };
 
+  const handleCategoryChange = (newCat) => {
+    const catObj = categoriesList.find(c => c.nombre.toLowerCase() === newCat.toLowerCase());
+    const subs = catObj ? subcategoriesList.filter(s => s.categoria_id === catObj.id) : [];
+    
+    setNewProduct(prev => ({
+      ...prev,
+      category: newCat,
+      subcategory: subs.length > 0 ? subs[0].nombre : ''
+    }));
+  };
+
   const handleSave = (e) => {
     e.preventDefault();
     if (!newProduct.name || !newProduct.price || !newProduct.stock) {
@@ -144,6 +161,7 @@ export default function InventoryPanel({
       price: '',
       stock: '',
       category: categories[0] || 'Maquillaje',
+      subcategory: '',
       description: '',
       image: '',
       activo: true,
@@ -249,7 +267,14 @@ export default function InventoryPanel({
 
                 {/* Category */}
                 <td className="p-4">
-                  <Badge variant="neutral">{product.category}</Badge>
+                  <div className="flex flex-col items-start gap-1">
+                    <Badge variant="neutral">{product.category}</Badge>
+                    {product.subcategory && (
+                      <span className="text-[10px] text-gray-400 font-bold bg-gray-50 border border-gray-150 px-1.5 py-0.5 rounded-full select-none capitalize">
+                        {product.subcategory}
+                      </span>
+                    )}
+                  </div>
                 </td>
 
                 {/* Price editable input */}
@@ -419,7 +444,7 @@ export default function InventoryPanel({
                   <label className="text-xs font-bold text-gray-800 mb-1.5 block">Categoría *</label>
                   <select
                     value={newProduct.category}
-                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-zinc-800/20 focus:border-zinc-800 transition-all cursor-pointer text-gray-800 font-semibold"
                   >
                     {categories.map((cat) => (
@@ -429,6 +454,35 @@ export default function InventoryPanel({
                     ))}
                   </select>
                 </div>
+
+                {(() => {
+                  const categoryObject = categoriesList.find(
+                    c => c.nombre.toLowerCase() === (newProduct.category || '').toLowerCase()
+                  );
+                  const availableSubcategories = categoryObject 
+                    ? subcategoriesList.filter(s => s.categoria_id === categoryObject.id) 
+                    : [];
+
+                  if (availableSubcategories.length === 0) return null;
+
+                  return (
+                    <div>
+                      <label className="text-xs font-bold text-gray-800 mb-1.5 block">Subcategoría</label>
+                      <select
+                        value={newProduct.subcategory}
+                        onChange={(e) => setNewProduct({ ...newProduct, subcategory: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-zinc-800/20 focus:border-zinc-800 transition-all cursor-pointer text-gray-800 font-semibold"
+                      >
+                        <option value="">Ninguna</option>
+                        {availableSubcategories.map((sub) => (
+                          <option key={sub.id} value={sub.nombre}>
+                            {sub.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })()}
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-gray-800">Descripción</label>
@@ -558,7 +612,9 @@ export default function InventoryPanel({
                         className="w-full h-full object-cover" 
                         alt="Preview Mini"
                       />
-                      <span className="absolute top-1.5 left-1.5 bg-zinc-950 text-white text-[8px] font-bold px-2 py-0.5 rounded border border-zinc-950 uppercase tracking-wider">{newProduct.category}</span>
+                      <span className="absolute top-1.5 left-1.5 bg-zinc-950 text-white text-[8px] font-bold px-2 py-0.5 rounded border border-zinc-950 uppercase tracking-wider">
+                        {newProduct.category} {newProduct.subcategory ? `/ ${newProduct.subcategory}` : ''}
+                      </span>
                     </div>
                     <h5 className="font-bold text-gray-900 truncate text-xs block">{newProduct.name || 'Nombre del Producto'}</h5>
                     <p className="text-gray-500 text-[10px] line-clamp-1 mt-0.5 font-medium">{newProduct.description || 'Descripción del producto...'}</p>
@@ -585,41 +641,19 @@ export default function InventoryPanel({
       )}
 
       {/* Delete Confirmation Modal */}
-      {deletingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-md border border-gray-200 shadow-xl max-w-sm w-full p-6 space-y-4">
-            <div className="flex items-center gap-2 text-red-650">
-              <svg className="w-5 h-5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wide">¿Confirmar Eliminación?</h4>
-            </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              ¿Estás seguro de que deseas eliminar el producto <strong className="text-gray-800">"{deletingProduct.name}"</strong>? 
-              <br/><br/>
-              Esta acción no se puede deshacer y el producto desaparecerá del catálogo de la tienda.
-            </p>
-            <div className="flex gap-3 pt-2">
-              <Button
-                variant="outline"
-                className="flex-1 py-2 text-xs rounded-md"
-                onClick={() => setDeletingProduct(null)}
-              >
-                Cancelar
-              </Button>
-              <button
-                className="flex-1 py-2 text-xs bg-red-600 text-white font-bold rounded-md hover:bg-red-700 transition-colors cursor-pointer"
-                onClick={() => {
-                  deleteProduct(deletingProduct.id);
-                  setDeletingProduct(null);
-                }}
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={!!deletingProduct}
+        onClose={() => setDeletingProduct(null)}
+        onConfirm={() => {
+          deleteProduct(deletingProduct.id);
+          setDeletingProduct(null);
+        }}
+        title="¿Confirmar Eliminación?"
+        description={`¿Estás seguro de que deseas eliminar el producto "${deletingProduct?.name}"? Esta acción no se puede deshacer y el producto desaparecerá del catálogo.`}
+        type="danger"
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
 
     </div>
   );

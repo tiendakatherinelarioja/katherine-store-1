@@ -17,6 +17,22 @@ export function useAnnouncements() {
       setLoading(true);
       setError(null);
 
+      // Check cache first (1 hour TTL)
+      const cacheKey = 'katherine_anuncios_cache';
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 3600000) { // 1 hora
+            setAnnouncements(data);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+
       // Attempt to query Supabase announcements table
       const { data, error: fetchErr } = await supabase
         .from('anuncios')
@@ -42,6 +58,14 @@ export function useAnnouncements() {
 
       setAnnouncements(data || []);
       setUsingFallback(false);
+      
+      // Save cache
+      if (data && data.length > 0) {
+        localStorage.setItem('katherine_anuncios_cache', JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+      }
     } catch (err) {
       console.error('Error al cargar anuncios de Supabase:', err);
       setError(err.message || 'Error al conectar con la tabla de anuncios.');
@@ -75,6 +99,7 @@ export function useAnnouncements() {
           .insert([{ texto: cleanText, link, activo: true }]);
 
         if (insertErr) throw insertErr;
+        localStorage.removeItem('katherine_anuncios_cache'); // Invalidate cache
         await fetchAnnouncements();
         return { success: true };
       } catch (err) {
@@ -109,6 +134,7 @@ export function useAnnouncements() {
           .eq('id', id);
 
         if (updateErr) throw updateErr;
+        localStorage.removeItem('katherine_anuncios_cache'); // Invalidate cache
         await fetchAnnouncements();
         return { success: true };
       } catch (err) {
@@ -135,6 +161,7 @@ export function useAnnouncements() {
           .eq('id', id);
 
         if (deleteErr) throw deleteErr;
+        localStorage.removeItem('katherine_anuncios_cache'); // Invalidate cache
         await fetchAnnouncements();
         return { success: true };
       } catch (err) {

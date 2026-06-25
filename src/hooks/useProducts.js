@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabaseClient';
 
-export function useProducts(isAdmin = false) {
+export function useProducts(isAdmin = false, enabled = true) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,6 +31,7 @@ export function useProducts(isAdmin = false) {
         price: parseFloat(item.precio || item.price || 0),
         image: item.imagen_url || item.image_url || item.image || '',
         category: item.categoria || item.category || '',
+        subcategory: item.subcategoria || '',
         description: item.descripcion || item.description || '',
         rating: parseFloat(item.rating || 5.0),
         reviewsCount: parseInt(item.reviews_count || item.reviewsCount || 0, 10),
@@ -50,8 +51,10 @@ export function useProducts(isAdmin = false) {
 
   // Initial load
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    if (enabled) {
+      fetchProducts();
+    }
+  }, [fetchProducts, enabled]);
 
   // Admin stock modifications
   const updateProductStock = async (productId, newStock) => {
@@ -100,6 +103,7 @@ export function useProducts(isAdmin = false) {
         precio: parseFloat(productData.price),
         stock: parseInt(productData.stock, 10),
         categoria: productData.category.toLowerCase(),
+        subcategoria: productData.subcategory ? productData.subcategory.toLowerCase() : null,
         descripcion: productData.description,
         imagen_url: productData.image,
         activo: productData.activo !== undefined ? productData.activo : true,
@@ -139,6 +143,7 @@ export function useProducts(isAdmin = false) {
         precio: parseFloat(productData.price),
         stock: parseInt(productData.stock, 10),
         categoria: productData.category.toLowerCase(),
+        subcategoria: productData.subcategory ? productData.subcategory.toLowerCase() : null,
         descripcion: productData.description,
         imagen_url: productData.image,
         activo: productData.activo !== undefined ? productData.activo : true,

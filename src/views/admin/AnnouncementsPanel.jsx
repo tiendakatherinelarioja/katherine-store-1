@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 import { Trash2, Plus, RefreshCw, Megaphone, CheckCircle, ToggleLeft, ToggleRight, AlertTriangle, Copy, Check } from 'lucide-react';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function AnnouncementsPanel() {
   const {
@@ -20,6 +21,7 @@ export default function AnnouncementsPanel() {
   const [newText, setNewText] = useState('');
   const [newLink, setNewLink] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [annToDelete, setAnnToDelete] = useState(null);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -35,9 +37,14 @@ export default function AnnouncementsPanel() {
     await updateAnnouncement(id, { activo: !currentStatus });
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este anuncio?')) {
-      await deleteAnnouncement(id);
+  const handleDelete = (id) => {
+    setAnnToDelete(id);
+  };
+
+  const confirmDeleteAction = async () => {
+    if (annToDelete) {
+      await deleteAnnouncement(annToDelete);
+      setAnnToDelete(null);
     }
   };
 
@@ -222,6 +229,16 @@ export default function AnnouncementsPanel() {
 
       </div>
 
+      <ConfirmDialog
+        isOpen={!!annToDelete}
+        onClose={() => setAnnToDelete(null)}
+        onConfirm={confirmDeleteAction}
+        title="¿Eliminar Anuncio?"
+        description="¿Estás seguro de que deseas eliminar este anuncio? Esta acción no se puede deshacer."
+        type="danger"
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ export default function Checkout() {
 
   const [formData, setFormData] = useState({
     nombre: '',
+    apellido: '',
     telefono: '',
     email: '',
     direccion: '',
@@ -25,9 +26,14 @@ export default function Checkout() {
   // Pre-fill form if user is logged in
   useEffect(() => {
     if (user) {
+      const parts = (user.user_metadata?.nombre || user.user_metadata?.full_name || '').split(' ');
+      const name = parts[0] || '';
+      const lastName = parts.slice(1).join(' ') || '';
+
       setFormData((prev) => ({
         ...prev,
-        nombre: user.user_metadata?.nombre || user.user_metadata?.full_name || prev.nombre,
+        nombre: user.user_metadata?.nombre || name || prev.nombre,
+        apellido: user.user_metadata?.apellido || lastName || prev.apellido,
         telefono: user.user_metadata?.telefono || prev.telefono,
         email: user.email || prev.email,
         direccion: user.user_metadata?.direccion || prev.direccion,
@@ -81,8 +87,27 @@ export default function Checkout() {
 
   const validate = () => {
     const tempErrors = {};
-    if (!formData.nombre.trim()) tempErrors.nombre = 'El nombre es obligatorio.';
-    if (!formData.telefono.trim()) tempErrors.telefono = 'El teléfono es obligatorio.';
+    if (!formData.nombre.trim()) {
+      tempErrors.nombre = 'El nombre es obligatorio.';
+    }
+    if (!formData.apellido.trim()) {
+      tempErrors.apellido = 'El apellido es obligatorio.';
+    }
+    
+    const cleanPhone = formData.telefono.trim();
+    if (!cleanPhone) {
+      tempErrors.telefono = 'El teléfono es obligatorio.';
+    } else if (cleanPhone.length < 6) {
+      tempErrors.telefono = 'El teléfono debe tener al menos 6 dígitos.';
+    }
+    
+    if (formData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        tempErrors.email = 'El formato de email no es válido.';
+      }
+    }
+    
     if (!formData.direccion.trim() && formData.metodoEnvio === 'envio') {
       tempErrors.direccion = 'La dirección de envío es obligatoria.';
     }
@@ -91,7 +116,19 @@ export default function Checkout() {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    let sanitizedValue = value;
+
+    if (field === 'nombre' || field === 'apellido') {
+      sanitizedValue = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]/g, '').slice(0, 50);
+    } else if (field === 'telefono') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 30);
+    } else if (field === 'email') {
+      sanitizedValue = value.replace(/[^a-zA-Z0-9@._+-]/g, '').slice(0, 100);
+    } else if (field === 'direccion') {
+      sanitizedValue = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s,./#°º-]/g, '').slice(0, 150);
+    }
+
+    setFormData((prev) => ({ ...prev, [field]: sanitizedValue }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
@@ -102,24 +139,25 @@ export default function Checkout() {
     if (!validate()) return;
 
     // 1. Generate text for WhatsApp redirect
-    let message = `*Hola Katherine*! 🛍️ Me gustaría realizar el siguiente pedido:\n\n`;
-    message += `👤 *Cliente:* ${formData.nombre}\n`;
-    message += `📞 *Teléfono:* ${formData.telefono}\n`;
-    if (formData.email) message += `📧 *Email:* ${formData.email}\n`;
-    message += `📦 *Método de Envío:* ${formData.metodoEnvio === 'envio' ? 'Envío a Domicilio' : 'Retiro en Local'}\n`;
-    if (formData.metodoEnvio === 'envio') message += `📍 *Dirección:* ${formData.direccion}\n`;
-    message += `💳 *Método de Pago:* ${formData.metodoPago === 'transferencia' ? 'Transferencia Bancaria' : formData.metodoPago === 'tarjeta' ? 'Tarjeta de Débito/Crédito' : 'Efectivo'}\n\n`;
+    let message = `*Nuevo Pedido - Katherine Store* ✨\n\n`;
+    message += `*Datos del Cliente:*\n`;
+    message += `• *Cliente:* ${formData.nombre} ${formData.apellido}\n`;
+    message += `• *Teléfono:* ${formData.telefono}\n`;
+    if (formData.email) message += `• *Email:* ${formData.email}\n`;
+    message += `• *Método de Envío:* ${formData.metodoEnvio === 'envio' ? 'Envío a Domicilio' : 'Retiro en Local'}\n`;
+    if (formData.metodoEnvio === 'envio') message += `• *Dirección:* ${formData.direccion}\n`;
+    message += `• *Método de Pago:* ${formData.metodoPago === 'transferencia' ? 'Transferencia Bancaria' : formData.metodoPago === 'tarjeta' ? 'Tarjeta de Débito/Crédito' : 'Efectivo'}\n\n`;
     
-    message += `🛒 *Detalle de Compra:*\n`;
+    message += `*Detalle de Compra:*\n`;
     cart.forEach((item) => {
-      message += `- *${item.cantidad}x* ${item.nombre} (_$${item.precio.toFixed(2)} c/u_) -> Subtotal: *$${(item.precio * item.cantidad).toFixed(2)}*\n`;
+      message += `• *${item.cantidad}x* ${item.nombre} (_$${item.precio.toFixed(2)} c/u_) -> Subtotal: *$${(item.precio * item.cantidad).toFixed(2)}*\n`;
     });
     
     if (appliedCoupon) {
       message += `\n🎟️ *Cupón Aplicado:* ${appliedCoupon.codigo} (-$${discountAmount.toFixed(2)})\n`;
     }
     
-    message += `\n💰 *Total de la Orden:* *$${finalTotal.toFixed(2)}*`;
+    message += `\n*Total a Coordinar:* *$${finalTotal.toFixed(2)}*`;
 
     // 2. Call Supabase RPC transaction hook
     // Pass coupon detail in customer payload for audit
@@ -205,21 +243,35 @@ export default function Checkout() {
             Datos de Contacto
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Nombre Completo"
+              label="Nombre *"
               value={formData.nombre}
               onChange={(e) => handleInputChange('nombre', e.target.value)}
               error={errors.nombre}
-              placeholder="Ej: María Gómez"
+              placeholder="Ej: María"
+              maxLength={50}
               required
             />
             <Input
-              label="Número de Teléfono"
+              label="Apellido *"
+              value={formData.apellido}
+              onChange={(e) => handleInputChange('apellido', e.target.value)}
+              error={errors.apellido}
+              placeholder="Ej: Gómez"
+              maxLength={50}
+              required
+            />
+          </div>
+          
+          <div className="mt-4">
+            <Input
+              label="Número de Teléfono *"
               value={formData.telefono}
               onChange={(e) => handleInputChange('telefono', e.target.value)}
               error={errors.telefono}
-              placeholder="Ej: +5491123456789"
+              placeholder="Ej: 5491123456789"
+              maxLength={30}
               required
             />
           </div>
@@ -230,6 +282,7 @@ export default function Checkout() {
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
             placeholder="maria@ejemplo.com"
+            maxLength={100}
           />
 
           <h3 className="text-lg font-bold text-gray-900 pt-4 mb-4 pb-2 border-b border-gray-100">
@@ -319,6 +372,7 @@ export default function Checkout() {
                 onChange={(e) => handleInputChange('direccion', e.target.value)}
                 error={errors.direccion}
                 placeholder="Calle, Número, Departamento, Ciudad"
+                maxLength={150}
                 required
               />
             </div>

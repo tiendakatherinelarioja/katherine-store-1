@@ -1,14 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Search, X } from 'lucide-react';
-
-// Helpers to map database category strings to General Category types
-const getGeneralCategory = (cat) => {
-  const lower = (cat || '').toLowerCase();
-  if (lower === 'todos') return 'Todos';
-  if (lower === 'maquillaje' || lower === 'manicura' || lower === 'estética') return 'Estética';
-  if (lower === 'ropa' || lower === 'accesorios' || lower === 'ropa y accesorios' || lower === 'moda') return 'Moda';
-  return 'Otros';
-};
 
 export default function ProductFilters({
   selectedCategory,
@@ -17,32 +8,33 @@ export default function ProductFilters({
   onSearchChange,
   sortBy,
   onSortByChange,
-  categories = []
+  categoriesList = [],
+  subcategoriesList = []
 }) {
-  const currentGeneral = getGeneralCategory(selectedCategory);
+  // Determinar qué categoría principal está activa basándose en selectedCategory
+  const activeCategory = useMemo(() => {
+    const selLower = (selectedCategory || '').toLowerCase();
+    if (!selLower || selLower === 'todos') return 'Todos';
+    
+    // Intentar buscar coincidencia directa con categoría
+    const directCat = categoriesList.find(c => c.nombre.toLowerCase() === selLower);
+    if (directCat) return directCat;
+    
+    // Intentar buscar coincidencia con subcategoría para obtener el padre
+    const sub = subcategoriesList.find(s => s.nombre.toLowerCase() === selLower);
+    if (sub) {
+      const parent = categoriesList.find(c => c.id === sub.categoria_id);
+      return parent || 'Todos';
+    }
+    
+    return 'Todos';
+  }, [selectedCategory, categoriesList, subcategoriesList]);
 
-  // Extract subcategories not falling under Estética or Moda
-  const otherSubcategories = categories.filter((cat) => {
-    const c = cat.toLowerCase();
-    return (
-      c !== 'todos' &&
-      c !== 'maquillaje' &&
-      c !== 'manicura' &&
-      c !== 'ropa' &&
-      c !== 'accesorios' &&
-      c !== 'ropa y accesorios' &&
-      c !== 'estética' &&
-      c !== 'moda' &&
-      c !== 'otros'
-    );
-  });
-
-  const handleGeneralSelect = (genName) => {
-    if (genName === 'Todos') onCategoryChange('Todos');
-    else if (genName === 'Estética') onCategoryChange('Estética');
-    else if (genName === 'Moda') onCategoryChange('Moda');
-    else onCategoryChange('Otros');
-  };
+  // Obtener subcategorías correspondientes a la categoría activa
+  const activeSubcategories = useMemo(() => {
+    if (activeCategory === 'Todos') return [];
+    return subcategoriesList.filter(s => s.categoria_id === activeCategory.id);
+  }, [activeCategory, subcategoriesList]);
 
   const pillBase = 'px-4 py-2 rounded-full text-xs font-bold border transition-all duration-200 active:scale-95 cursor-pointer';
   const pillActive = 'bg-charcoal border-charcoal text-alabaster shadow-sm';
@@ -55,81 +47,64 @@ export default function ProductFilters({
   return (
     <div className="flex flex-col gap-5 text-left">
 
-      {/* Nivel 1: Categorías Generales */}
+      {/* Nivel 1: Categorías Dinámicas */}
       <div>
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-3">
           Categoría
         </p>
         <div className="flex flex-wrap gap-2">
-          {['Todos', 'Estética', 'Moda', 'Otros'].map((genCat) => (
+          {/* Botón de Todos */}
+          <button
+            type="button"
+            onClick={() => onCategoryChange('Todos')}
+            className={`${pillBase} ${activeCategory === 'Todos' ? pillActive : pillInactive}`}
+          >
+            Todos
+          </button>
+          
+          {/* Botones de Categorías de la BD */}
+          {categoriesList.map((cat) => (
             <button
-              key={genCat}
+              key={cat.id}
               type="button"
-              onClick={() => handleGeneralSelect(genCat)}
-              className={`${pillBase} ${currentGeneral === genCat ? pillActive : pillInactive}`}
+              onClick={() => onCategoryChange(cat.nombre)}
+              className={`${pillBase} ${activeCategory !== 'Todos' && activeCategory.id === cat.id ? pillActive : pillInactive}`}
             >
-              {genCat}
+              {cat.nombre}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Nivel 2: Subcategorías */}
-      {currentGeneral !== 'Todos' && (
+      {/* Nivel 2: Subcategorías Dinámicas */}
+      {activeCategory !== 'Todos' && activeSubcategories.length > 0 && (
         <div className="flex flex-wrap gap-2 pl-1 animate-fade-in border-l-2 border-gray-100 ml-1">
+          {/* Botón para ver todo en esta categoría */}
           <button
             type="button"
-            onClick={() => onCategoryChange(currentGeneral)}
+            onClick={() => onCategoryChange(activeCategory.nombre)}
             className={`${subPillBase} ${
-              selectedCategory.toLowerCase() === currentGeneral.toLowerCase()
+              selectedCategory.toLowerCase() === activeCategory.nombre.toLowerCase()
                 ? subPillActive
                 : subPillInactive
             }`}
           >
-            Todos en {currentGeneral}
+            Todos en {activeCategory.nombre}
           </button>
 
-          {currentGeneral === 'Estética' &&
-            ['Maquillaje', 'Manicura'].map((sub) => (
-              <button
-                key={sub}
-                type="button"
-                onClick={() => onCategoryChange(sub)}
-                className={`${subPillBase} ${
-                  selectedCategory.toLowerCase() === sub.toLowerCase() ? subPillActive : subPillInactive
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-
-          {currentGeneral === 'Moda' &&
-            ['Ropa', 'Accesorios'].map((sub) => (
-              <button
-                key={sub}
-                type="button"
-                onClick={() => onCategoryChange(sub)}
-                className={`${subPillBase} ${
-                  selectedCategory.toLowerCase() === sub.toLowerCase() ? subPillActive : subPillInactive
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-
-          {currentGeneral === 'Otros' &&
-            otherSubcategories.map((sub) => (
-              <button
-                key={sub}
-                type="button"
-                onClick={() => onCategoryChange(sub)}
-                className={`${subPillBase} ${
-                  selectedCategory.toLowerCase() === sub.toLowerCase() ? subPillActive : subPillInactive
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
+          {/* Botones de Subcategorías de la BD */}
+          {activeSubcategories.map((sub) => (
+            <button
+              key={sub.id}
+              type="button"
+              onClick={() => onCategoryChange(sub.nombre)}
+              className={`${subPillBase} ${
+                selectedCategory.toLowerCase() === sub.nombre.toLowerCase() ? subPillActive : subPillInactive
+              }`}
+            >
+              {sub.nombre}
+            </button>
+          ))}
         </div>
       )}
 
