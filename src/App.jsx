@@ -24,6 +24,7 @@ import Contact from './views/client/Contact';
 import MyOrders from './views/client/MyOrders';
 import MyAccount from './views/client/MyAccount';
 import ProductDetail from './views/client/ProductDetail';
+import UnderConstruction from './components/ui/UnderConstruction';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminLayout = lazy(() => import('./views/admin/AdminLayout'));
@@ -68,6 +69,13 @@ function AppContent() {
       setIsCartOpen(true); // Open cart to show item added
     }
   };
+
+  const isMaintenanceActive = !checkingAuth && userRole !== 'admin' && userRole !== 'superadmin';
+  const showUnderConstruction = isMaintenanceActive && view !== 'login';
+
+  if (showUnderConstruction) {
+    return <UnderConstruction onAdminLogin={() => setView('login')} />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
