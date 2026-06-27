@@ -16,33 +16,33 @@ import {
   CheckCircle2, 
   XCircle, 
   AlertCircle,
-  User
+  User,
+  Mail
 } from 'lucide-react';
 
 export default function MyOrders() {
   const { setView, user } = useCart();
-  const [phone, setPhone] = useState('');
-  const [savedPhone, setSavedPhone] = useState('');
+  const [searchEmail, setSearchEmail] = useState('');
+  const [savedEmail, setSavedEmail] = useState('');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
 
-  // Load saved phone number or user orders on mount/session changes
+  // Load saved email or user orders on mount/session changes
   useEffect(() => {
     if (user) {
-      const userPhone = user.user_metadata?.telefono || '';
-      const localPhone = localStorage.getItem('katherine_client_phone') || '';
-      fetchClientOrders(userPhone || localPhone, user.email);
+      const localEmail = localStorage.getItem('katherine_client_email') || '';
+      fetchClientOrders(user.email || localEmail);
     } else {
-      const localPhone = localStorage.getItem('katherine_client_phone');
-      if (localPhone) {
-        setSavedPhone(localPhone);
-        setPhone(localPhone);
-        fetchClientOrders(localPhone);
+      const localEmail = localStorage.getItem('katherine_client_email');
+      if (localEmail) {
+        setSavedEmail(localEmail);
+        setSearchEmail(localEmail);
+        fetchClientOrders(localEmail);
       } else {
-        setSavedPhone('');
-        setPhone('');
+        setSavedEmail('');
+        setSearchEmail('');
         setOrders([]);
         setSearched(false);
       }
@@ -75,39 +75,31 @@ export default function MyOrders() {
     };
   }, []);
 
-  const fetchClientOrders = async (targetPhone, targetEmail) => {
-    const cleanPhone = targetPhone ? targetPhone.trim() : '';
-    const cleanEmail = targetEmail ? targetEmail.trim() : '';
-    
-    if (!cleanPhone && !cleanEmail) return;
-    
+  const fetchClientOrders = async (targetEmail) => {
+    const cleanEmail = targetEmail ? targetEmail.trim().toLowerCase() : '';
+
+    if (!cleanEmail) return;
+
     setLoading(true);
     setError('');
     setSearched(true);
-    
-    try {
-      let query = supabase.from('vista_pedidos_completos').select('*');
-      
-      if (cleanEmail && cleanPhone) {
-        query = query.or(`cliente_email.eq.${cleanEmail},cliente_telefono.eq.${cleanPhone}`);
-      } else if (cleanEmail) {
-        query = query.eq('cliente_email', cleanEmail);
-      } else {
-        query = query.eq('cliente_telefono', cleanPhone);
-      }
 
-      const { data, error: fetchErr } = await query;
+    try {
+      const { data, error: fetchErr } = await supabase
+        .from('vista_pedidos_completos')
+        .select('*')
+        .eq('cliente_email', cleanEmail);
 
       if (fetchErr) throw fetchErr;
 
       const normalized = (data || []).map(normalizeOrder);
       // Sort by date descending
       normalized.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-      
+
       setOrders(normalized);
-      if (cleanPhone) {
-        localStorage.setItem('katherine_client_phone', cleanPhone);
-        setSavedPhone(cleanPhone);
+      if (cleanEmail) {
+        localStorage.setItem('katherine_client_email', cleanEmail);
+        setSavedEmail(cleanEmail);
       }
     } catch (err) {
       console.error('Error fetching client orders:', err);
@@ -117,15 +109,16 @@ export default function MyOrders() {
     }
   };
 
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchClientOrders(phone);
+    fetchClientOrders(searchEmail);
   };
 
-  const handleClearPhone = () => {
-    localStorage.removeItem('katherine_client_phone');
-    setSavedPhone('');
-    setPhone('');
+  const handleClearEmail = () => {
+    localStorage.removeItem('katherine_client_email');
+    setSavedEmail('');
+    setSearchEmail('');
     setOrders([]);
     setSearched(false);
     setError('');
@@ -185,12 +178,12 @@ export default function MyOrders() {
           Seguimiento de Pedidos
         </h1>
         <p className="text-gray-500 text-sm leading-relaxed">
-          Consulta en tiempo real el estado de tus compras ingresando el número de teléfono con el que realizaste el pedido.
+          Consulta en tiempo real el estado de tus compras ingresando el correo electrónico con el que realizaste el pedido.
         </p>
       </div>
 
-      {/* Phone input form if not logged in / no phone saved */}
-      {!savedPhone && !user ? (
+      {/* Email input form if not logged in / no email saved */}
+      {!savedEmail && !user ? (
         <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg max-w-md mx-auto">
           <form onSubmit={handleSearchSubmit} className="space-y-6">
             <div className="text-center mb-4">
@@ -198,16 +191,17 @@ export default function MyOrders() {
                 <Search className="w-6 h-6 text-gray-500" />
               </div>
               <h3 className="font-bold text-gray-900 text-base">Buscar mis compras</h3>
-              <p className="text-xs text-gray-400 mt-1">Ingresa tu número de teléfono de WhatsApp</p>
+              <p className="text-xs text-gray-400 mt-1">Ingresa tu correo electrónico</p>
             </div>
 
             <Input
-              label="Número de Teléfono"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Ej: +5493804918672"
+              label="Correo Electrónico"
+              type="email"
+              value={searchEmail}
+              onChange={(e) => setSearchEmail(e.target.value)}
+              placeholder="Ej: maria@ejemplo.com"
               required
-              helperText="Utiliza el mismo formato con el que completaste tu pedido."
+              helperText="Utiliza el mismo email con el que completaste tu pedido."
             />
 
             <Button type="submit" loading={loading} className="w-full justify-center py-3.5 text-xs font-bold">
@@ -216,7 +210,7 @@ export default function MyOrders() {
           </form>
         </div>
       ) : (
-        <div className="space-y-8">          {/* Account Status Bar (if logged in) or Saved Phone Status Bar */}
+        <div className="space-y-8">          {/* Account Status Bar (if logged in) or Saved Email Status Bar */}
           {user ? (
             <div className="bg-zinc-50 border border-zinc-200/50 px-6 py-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -232,9 +226,8 @@ export default function MyOrders() {
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => {
-                    const userPhone = user.user_metadata?.telefono || '';
-                    const localPhone = localStorage.getItem('katherine_client_phone') || '';
-                    fetchClientOrders(userPhone || localPhone, user.email);
+                    const localEmail = localStorage.getItem('katherine_client_email') || '';
+                    fetchClientOrders(user.email || localEmail);
                   }}
                   disabled={loading}
                   className="px-4 py-2 border border-gray-200 hover:border-zinc-800 bg-white hover:text-black rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xxs active:scale-[0.98]"
@@ -248,17 +241,17 @@ export default function MyOrders() {
             <div className="bg-gray-50/50 border border-gray-150 px-6 py-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white border border-gray-150 rounded-full flex items-center justify-center shadow-xxs">
-                  <Phone className="w-4 h-4 text-zinc-950" />
+                  <Mail className="w-4 h-4 text-zinc-950" />
                 </div>
                 <div className="text-left">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Historial de Teléfono</span>
-                  <span className="font-bold text-gray-900 text-sm">{savedPhone}</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Historial de Email</span>
+                  <span className="font-bold text-gray-900 text-sm">{savedEmail}</span>
                 </div>
               </div>
               
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
-                  onClick={() => fetchClientOrders(savedPhone)}
+                  onClick={() => fetchClientOrders(savedEmail)}
                   disabled={loading}
                   className="px-4 py-2 border border-gray-200 hover:border-zinc-800 bg-white hover:text-black rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xxs active:scale-[0.98]"
                 >
@@ -266,10 +259,10 @@ export default function MyOrders() {
                   Actualizar
                 </button>
                 <button
-                  onClick={handleClearPhone}
-                  className="px-4 py-2 border border-transparent text-gray-400 hover:text-red-500 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                  onClick={handleClearEmail}
+                  className="px-4 py-2 bg-red-50 text-red-650 hover:bg-red-100 rounded-xl text-xs font-bold transition-colors cursor-pointer border border-red-150"
                 >
-                  Consultar otro número
+                  Cambiar Email
                 </button>
               </div>
             </div>
@@ -300,14 +293,14 @@ export default function MyOrders() {
               <h3 className="text-lg font-bold text-gray-900 mb-2">No se encontraron pedidos</h3>
               {user ? (
                 <p className="text-gray-500 text-xs mb-6">
-                  No pudimos localizar compras asociadas a tu cuenta (<strong className="text-gray-800">{user.email}</strong>). Si realizaste compras como invitado anteriormente, puedes buscarlas por tu número de teléfono cerrando sesión.
+                  No pudimos localizar compras asociadas a tu cuenta (<strong className="text-gray-800">{user.email}</strong>). Si realizaste compras como invitado anteriormente, puedes buscarlas por tu correo electrónico cerrando sesión.
                 </p>
               ) : (
                 <p className="text-gray-500 text-xs mb-6">
-                  No pudimos localizar compras activas asociadas al número de teléfono <strong className="text-gray-800">{savedPhone}</strong>.
+                  No pudimos localizar compras activas asociadas al correo electrónico <strong className="text-gray-800">{savedEmail}</strong>.
                 </p>
               )}
-              {!user && <Button onClick={handleClearPhone}>Intentar con otro número</Button>}
+              {!user && <Button onClick={handleClearEmail}>Intentar con otro email</Button>}
             </div>
           )}
 

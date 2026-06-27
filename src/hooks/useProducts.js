@@ -13,7 +13,8 @@ export function useProducts(isAdmin = false, enabled = true) {
 
       // Select table or optimized active view
       const source = isAdmin ? 'productos' : 'vista_catalogo_activo';
-      let query = supabase.from(source).select('*');
+      // Select only the columns needed by the UI to keep payload size minimal (rating and reviews_count are frontend-only fallbacks)
+      let query = supabase.from(source).select('id, nombre, precio, imagen_url, categoria, subcategoria, descripcion, stock, activo, relevante');
 
       // Filter by category column using lowcase database ENUM representation
       if (category && category !== 'Todos') {

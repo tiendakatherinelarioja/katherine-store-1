@@ -1,6 +1,11 @@
 /**
  * Compresses an image file and converts it to WebP format using HTML5 Canvas.
  * 
+ * Security constraints enforced:
+ *  - MAX_FILE_SIZE_MB: Prevents browser memory exhaustion from huge files.
+ *  - ALLOWED_MIME_TYPES: Strict whitelist instead of a loose prefix check (avoids MIME spoofing).
+ *  - MAX_CANVAS_DIMENSION: Hard cap on canvas pixels to prevent coordinate-overflow DoS.
+ * 
  * @param {File} file - The original image file (JPEG, PNG, etc.)
  * @param {Object} options - Compression options
  * @param {number} options.maxWidth - Maximum width of the output image (default: 1000)
@@ -8,11 +13,22 @@
  * @param {number} options.quality - Compression quality between 0 and 1 (default: 0.8)
  * @returns {Promise<Blob>} A promise that resolves to the compressed WebP Blob.
  */
+
+const MAX_FILE_SIZE_MB = 15;
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+const MAX_CANVAS_DIMENSION = 4096; // Hard limit to prevent DoS via enormous canvases
+
 export function compressToWebP(file, { maxWidth = 1000, maxHeight = 1000, quality = 0.8 } = {}) {
   return new Promise((resolve, reject) => {
-    // Check if the file is an image
-    if (!file.type.startsWith('image/')) {
-      reject(new Error('El archivo proporcionado no es una imagen válida.'));
+    // 1. Validate MIME type against explicit whitelist (not just a prefix)
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      reject(new Error(`Tipo de archivo no permitido. Solo se aceptan: JPEG, PNG, WebP, GIF, AVIF.`));
+      return;
+    }
+
+    // 2. Validate file size before loading into memory
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      reject(new Error(`El archivo es demasiado grande. El máximo permitido es ${MAX_FILE_SIZE_MB}MB.`));
       return;
     }
 
@@ -24,10 +40,12 @@ export function compressToWebP(file, { maxWidth = 1000, maxHeight = 1000, qualit
       img.src = event.target.result;
 
       img.onload = () => {
-        // Calculate new dimensions keeping aspect ratio
-        let width = img.width;
-        let height = img.height;
+        // 3. Clamp source dimensions to absolute max BEFORE applying user-defined limits
+        //    This prevents DoS if the image header reports absurd dimensions.
+        let width = Math.min(img.width, MAX_CANVAS_DIMENSION);
+        let height = Math.min(img.height, MAX_CANVAS_DIMENSION);
 
+        // 4. Scale down to user-defined maxWidth/maxHeight maintaining aspect ratio
         if (width > height) {
           if (width > maxWidth) {
             height = Math.round((height * maxWidth) / width);
@@ -64,7 +82,7 @@ export function compressToWebP(file, { maxWidth = 1000, maxHeight = 1000, qualit
       };
 
       img.onerror = () => {
-        reject(new Error('Error al cargar la imagen para compresión.'));
+        reject(new Error('El archivo de imagen está corrupto o no es válido.'));
       };
     };
 

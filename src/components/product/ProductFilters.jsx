@@ -23,7 +23,8 @@ export default function ProductFilters({
     // Intentar buscar coincidencia con subcategoría para obtener el padre
     const sub = subcategoriesList.find(s => s.nombre.toLowerCase() === selLower);
     if (sub) {
-      const parent = categoriesList.find(c => c.id === sub.categoria_id);
+      // categoria_padre stores the category NAME (text), not a uuid
+      const parent = categoriesList.find(c => c.nombre.toLowerCase() === sub.categoria_padre?.toLowerCase());
       return parent || 'Todos';
     }
     
@@ -33,7 +34,8 @@ export default function ProductFilters({
   // Obtener subcategorías correspondientes a la categoría activa
   const activeSubcategories = useMemo(() => {
     if (activeCategory === 'Todos') return [];
-    return subcategoriesList.filter(s => s.categoria_id === activeCategory.id);
+    // categoria_padre stores the category NAME (text), not a uuid
+    return subcategoriesList.filter(s => s.categoria_padre?.toLowerCase() === activeCategory.nombre.toLowerCase());
   }, [activeCategory, subcategoriesList]);
 
   const pillBase = 'px-4 py-2 rounded-full text-xs font-bold border transition-all duration-200 active:scale-95 cursor-pointer';

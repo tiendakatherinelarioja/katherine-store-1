@@ -8,4 +8,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-})
+  // V-09 FIX: Strip all console.log and debugger calls from the production bundle.
+  // This prevents leaking order data, DB schema details, and internal state
+  // to end users via browser DevTools in a deployed environment.
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
+})

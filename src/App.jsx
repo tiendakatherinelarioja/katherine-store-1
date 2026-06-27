@@ -14,19 +14,20 @@ import Modal from './components/ui/Modal';
 import Button from './components/ui/Button';
 import Badge from './components/ui/Badge';
 
-// Views
+// Views - Static for the initial landing view to render instantly
 import Home from './views/client/Home';
-import Catalog from './views/client/Catalog';
-import Checkout from './views/client/Checkout';
-import Login from './views/client/Login';
-import HowToBuy from './views/client/HowToBuy';
-import Contact from './views/client/Contact';
-import MyOrders from './views/client/MyOrders';
-import MyAccount from './views/client/MyAccount';
-import ProductDetail from './views/client/ProductDetail';
 import UnderConstruction from './components/ui/UnderConstruction';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Views - Lazy-loaded on-demand as the user navigates
+const Catalog = lazy(() => import('./views/client/Catalog'));
+const Checkout = lazy(() => import('./views/client/Checkout'));
+const Login = lazy(() => import('./views/client/Login'));
+const HowToBuy = lazy(() => import('./views/client/HowToBuy'));
+const Contact = lazy(() => import('./views/client/Contact'));
+const MyOrders = lazy(() => import('./views/client/MyOrders'));
+const MyAccount = lazy(() => import('./views/client/MyAccount'));
+const ProductDetail = lazy(() => import('./views/client/ProductDetail'));
 const AdminLayout = lazy(() => import('./views/admin/AdminLayout'));
 
 function AppContent() {
@@ -93,31 +94,38 @@ function AppContent() {
             transition={{ duration: 0.2, ease: 'easeInOut' }}
             className="w-full h-full"
           >
-            {view === 'home' && (
-              clientProductsLoading ? (
-                <div className="flex justify-center items-center py-20"><span className="text-gray-500 font-bold animate-pulse">Cargando catálogo...</span></div>
-              ) : clientProductsError ? (
-                <div className="text-center py-20 text-red-500 font-bold">{clientProductsError}</div>
-              ) : (
-                <Home products={clientProducts} />
-              )
-            )}
-            {view === 'catalog' && (
-              clientProductsLoading ? (
-                <div className="flex justify-center items-center py-20"><span className="text-gray-500 font-bold animate-pulse">Cargando catálogo...</span></div>
-              ) : clientProductsError ? (
-                <div className="text-center py-20 text-red-500 font-bold">{clientProductsError}</div>
-              ) : (
-                <Catalog products={clientProducts} />
-              )
-            )}
-            {view === 'product-detail' && <ProductDetail />}
-            {view === 'checkout' && <Checkout />}
-            {view === 'login' && <Login />}
-            {view === 'howtobuy' && <HowToBuy />}
-            {view === 'contact' && <Contact />}
-            {view === 'myorders' && <MyOrders />}
-            {view === 'myaccount' && <MyAccount />}
+            <Suspense fallback={
+              <div className="flex flex-col items-center justify-center py-32 font-sans">
+                <div className="w-8 h-8 rounded-full border-4 border-gray-150 border-t-zinc-950 animate-spin mb-3" />
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">Cargando página...</span>
+              </div>
+            }>
+              {view === 'home' && (
+                clientProductsLoading ? (
+                  <div className="flex justify-center items-center py-20"><span className="text-gray-500 font-bold animate-pulse">Cargando catálogo...</span></div>
+                ) : clientProductsError ? (
+                  <div className="text-center py-20 text-red-500 font-bold">{clientProductsError}</div>
+                ) : (
+                  <Home products={clientProducts} />
+                )
+              )}
+              {view === 'catalog' && (
+                clientProductsLoading ? (
+                  <div className="flex justify-center items-center py-20"><span className="text-gray-500 font-bold animate-pulse">Cargando catálogo...</span></div>
+                ) : clientProductsError ? (
+                  <div className="text-center py-20 text-red-500 font-bold">{clientProductsError}</div>
+                ) : (
+                  <Catalog products={clientProducts} />
+                )
+              )}
+              {view === 'product-detail' && <ProductDetail />}
+              {view === 'checkout' && <Checkout />}
+              {view === 'login' && <Login />}
+              {view === 'howtobuy' && <HowToBuy />}
+              {view === 'contact' && <Contact />}
+              {view === 'myorders' && <MyOrders />}
+              {view === 'myaccount' && <MyAccount />}
+            </Suspense>
             {view === 'admin' && (userRole === 'admin' || userRole === 'superadmin') && (
               <Suspense fallback={
                 <div className="fixed inset-0 bg-gray-50 flex flex-col items-center justify-center font-jakarta">
