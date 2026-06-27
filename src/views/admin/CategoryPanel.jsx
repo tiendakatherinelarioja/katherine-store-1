@@ -113,17 +113,26 @@ export default function CategoryPanel({
     const name = (newSubNames[categoryId] || '').trim();
     if (!name) return;
 
+    // Resolve the category NAME from the uuid — because DB stores 'categoria_padre' as text
+    const catObj = categoriesList.find((c) => c.id === categoryId);
+    const categoryNombre = catObj ? catObj.nombre : '';
+    if (!categoryNombre) return;
+
+    // Check for duplicates using the real column: categoria_padre (text)
     const existing = subcategoriesList.find(
-      (s) => s.categoria_id === categoryId && s.nombre.toLowerCase() === name.toLowerCase()
+      (s) => s.categoria_padre?.toLowerCase() === categoryNombre.toLowerCase()
+           && s.nombre.toLowerCase() === name.toLowerCase()
     );
     if (existing) {
       alert('Esta subcategoría ya existe en esta categoría.');
       return;
     }
 
-    addSubcategory(name, categoryId);
+    // Pass category NAME to the hook — matches 'categoria_padre' text column in the DB
+    addSubcategory(name, categoryNombre);
     setNewSubNames((prev) => ({ ...prev, [categoryId]: '' }));
   };
+
 
   const handleUpdateSub = (sub) => {
     const name = editingSubName.trim();
@@ -226,7 +235,8 @@ export default function CategoryPanel({
                     const count = getProductCount(cat.nombre);
                     const isEditing = editingId === cat.id;
                     const isExpanded = !!expandedCategories[cat.id];
-                    const subs = subcategoriesList.filter(s => s.categoria_id === cat.id);
+                    // categoria_padre is text (category name), not a uuid foreign key
+                    const subs = subcategoriesList.filter(s => s.categoria_padre?.toLowerCase() === cat.nombre.toLowerCase());
 
                     return (
                       <React.Fragment key={cat.id}>

@@ -127,7 +127,9 @@ export default function InventoryPanel({
 
   const handleCategoryChange = (newCat) => {
     const catObj = categoriesList.find(c => c.nombre.toLowerCase() === newCat.toLowerCase());
-    const subs = catObj ? subcategoriesList.filter(s => s.categoria_id === catObj.id) : [];
+    // categoria_padre stores the category NAME (text), not a uuid
+    const subs = catObj ? subcategoriesList.filter(s => s.categoria_padre?.toLowerCase() === catObj.nombre.toLowerCase()) : [];
+
     
     setNewProduct(prev => ({
       ...prev,
@@ -459,8 +461,9 @@ export default function InventoryPanel({
                   const categoryObject = categoriesList.find(
                     c => c.nombre.toLowerCase() === (newProduct.category || '').toLowerCase()
                   );
+                  // categoria_padre stores the category NAME (text), not a uuid
                   const availableSubcategories = categoryObject 
-                    ? subcategoriesList.filter(s => s.categoria_id === categoryObject.id) 
+                    ? subcategoriesList.filter(s => s.categoria_padre?.toLowerCase() === categoryObject.nombre.toLowerCase()) 
                     : [];
 
                   if (availableSubcategories.length === 0) return null;

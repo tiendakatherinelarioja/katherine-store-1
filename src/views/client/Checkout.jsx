@@ -100,10 +100,15 @@ export default function Checkout() {
     } else if (cleanPhone.length < 6) {
       tempErrors.telefono = 'El teléfono debe tener al menos 6 dígitos.';
     }
-    
-    if (formData.email.trim()) {
+
+    // Email is required — it is the unique link between an order and a person
+    // (works for guests, Google OAuth users, and registered users alike)
+    const cleanEmail = formData.email.trim();
+    if (!cleanEmail) {
+      tempErrors.email = 'El email es obligatorio para poder rastrear tu pedido.';
+    } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email.trim())) {
+      if (!emailRegex.test(cleanEmail)) {
         tempErrors.email = 'El formato de email no es válido.';
       }
     }
@@ -171,9 +176,13 @@ export default function Checkout() {
     const res = await checkoutAsGuest(submissionData, cart);
 
     if (res.success) {
-      // Save phone number for automatic tracking
+      // Save phone and email for automatic order tracking in MyOrders
       if (formData.telefono) {
         localStorage.setItem('katherine_client_phone', formData.telefono.trim());
+      }
+      if (formData.email) {
+        // Guests use this to auto-search their orders on the next visit
+        localStorage.setItem('katherine_client_email', formData.email.trim().toLowerCase());
       }
 
       // 3. Open WhatsApp Web / App
@@ -277,13 +286,22 @@ export default function Checkout() {
           </div>
 
           <Input
-            label="Email (Opcional)"
+            label={user ? 'Email (no modificable)' : 'Email *'}
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
+            error={errors.email}
             placeholder="maria@ejemplo.com"
             maxLength={100}
+            required
+            disabled={!!user}
+            className={user ? 'opacity-70 cursor-not-allowed' : ''}
           />
+          {!user && (
+            <p className="-mt-2 text-[11px] text-gray-400">
+              📬 Tu email es el identificador de tus pedidos. Úsalo para consultar el estado de tu compra.
+            </p>
+          )}
 
           <h3 className="text-lg font-bold text-gray-900 pt-4 mb-4 pb-2 border-b border-gray-100">
             Métodos de Envío y Pago

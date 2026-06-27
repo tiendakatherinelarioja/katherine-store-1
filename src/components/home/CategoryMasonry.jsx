@@ -5,17 +5,17 @@ import { ArrowRight } from 'lucide-react';
 const categories = [
   {
     name: 'Maquillaje',
-    image: 'https://images.pexels.com/photos/6167442/pexels-photo-6167442.jpeg',
+    image: 'https://images.pexels.com/photos/6167442/pexels-photo-6167442.jpeg?auto=compress&cs=tinysrgb&w=800',
     desc: 'Explorá colores vibrantes'
   },
   {
     name: 'Manicura',
-    image: 'https://images.unsplash.com/photo-1610992015732-2449b76344bc?crop=entropy&cs=srgb&fm=jpg&q=85',
+    image: 'https://images.unsplash.com/photo-1610992015732-2449b76344bc?crop=entropy&cs=srgb&fm=jpg&q=80&w=600',
     desc: 'Cuidado profesional para tus manos'
   },
   {
     name: 'Accesorios',
-    image: 'https://images.unsplash.com/photo-1577909687863-91bb3ec12db5?crop=entropy&cs=srgb&fm=jpg&q=85',
+    image: 'https://images.unsplash.com/photo-1577909687863-91bb3ec12db5?crop=entropy&cs=srgb&fm=jpg&q=80&w=600',
     desc: 'El toque final para tu outfit'
   }
 ];
@@ -26,7 +26,7 @@ export default function CategoryMasonry({ onExplore }) {
       <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
         <div className="max-w-xl">
           <motion.div 
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="flex items-center gap-3 mb-4"
@@ -35,10 +35,10 @@ export default function CategoryMasonry({ onExplore }) {
             <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-taupe">Categorías</span>
           </motion.div>
           <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.05 }}
             className="text-4xl sm:text-5xl md:text-6xl font-jakarta font-medium text-charcoal tracking-tighter leading-tight"
           >
             Busca por nuestra web las diferentes categorías. <br />
@@ -49,9 +49,9 @@ export default function CategoryMasonry({ onExplore }) {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.15 }}
           onClick={() => onExplore('Todos')}
-          className="text-sm font-bold border-b-2 border-charcoal pb-1 hover:text-taupe hover:border-taupe transition-all duration-300 cursor-pointer"
+          className="text-sm font-bold border-b-2 border-charcoal pb-1 hover:text-taupe hover:border-taupe transition-all duration-300 cursor-pointer bg-transparent border-t-0 border-x-0"
         >
           Ver todo el catálogo
         </motion.button>
@@ -60,17 +60,18 @@ export default function CategoryMasonry({ onExplore }) {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto md:h-[700px]">
         {/* Featured Large Card */}
         <motion.div 
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="md:col-span-7 lg:col-span-8 relative rounded-[2.5rem] overflow-hidden group cursor-pointer h-[400px] md:h-full"
           onClick={() => onExplore(categories[0].name)}
         >
           <img 
             src={categories[0].image} 
             alt={categories[0].name}
-            className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+            className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-102"
+            loading="lazy"
           />
           <div className="absolute inset-0 bg-linear-to-t from-charcoal/80 via-charcoal/20 to-transparent opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
           <div className="absolute bottom-12 left-12 text-white max-w-sm">
@@ -86,17 +87,18 @@ export default function CategoryMasonry({ onExplore }) {
           {categories.slice(1).map((cat, idx) => (
             <motion.div 
               key={cat.name}
-              initial={{ opacity: 0, x: 40 }}
+              initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 + idx * 0.1 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 + idx * 0.05 }}
               className="flex-1 relative rounded-[2.5rem] overflow-hidden group cursor-pointer min-h-[300px]"
               onClick={() => onExplore(cat.name)}
             >
               <img 
                 src={cat.image} 
                 alt={cat.name}
-                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-charcoal/30 group-hover:bg-charcoal/50 transition-colors duration-500" />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-alabaster p-8 text-center">

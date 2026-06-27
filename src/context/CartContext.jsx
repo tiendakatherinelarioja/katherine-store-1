@@ -28,19 +28,21 @@ export function CartProvider({ children }) {
     localStorage.setItem('katherine_cart', JSON.stringify(cart));
   }, [cart]);
 
-  // Dynamic user role resolving function (extremely robust checks)
+  // Dynamic user role resolving function
+  // SECURITY: Only reads from app_metadata (server-controlled, immutable by client).
+  // user_metadata is writable by any authenticated user via supabase.auth.updateUser()
+  // and must NEVER be used for authorization decisions.
   const resolveUserRole = async (currentUser) => {
     if (!currentUser) return null;
     
-    // 1. Check metadata role (standard Supabase pattern)
-    let role = currentUser.app_metadata?.role || 
-               currentUser.user_metadata?.role || 
-               currentUser.app_metadata?.rol || 
-               currentUser.user_metadata?.rol;
+    // 1. ONLY check app_metadata — this field can only be modified via service_role (backend)
+    //    user_metadata is intentionally excluded: it is writable by the user themselves.
+    const role = currentUser.app_metadata?.role ||
+                 currentUser.app_metadata?.rol;
                
     if (role) return role.toLowerCase();
 
-    // 2. Fallback: Query 'perfiles' table
+    // 2. Fallback: Query 'perfiles' table (protected by RLS — user sees only their own row)
     try {
       const { data, error } = await supabase
         .from('perfiles')
@@ -51,11 +53,11 @@ export function CartProvider({ children }) {
       if (!error && data?.rol) {
         return data.rol.toLowerCase();
       }
-    } catch (e) {
-      console.log('No profiles table named perfiles or query failed:', e);
+    } catch {
+      // Silent fail — table may not exist yet, not a security concern
     }
 
-    // 3. Fallback: Query 'profiles' table
+    // 3. Fallback: Query 'profiles' table (protected by RLS — user sees only their own row)
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -66,11 +68,11 @@ export function CartProvider({ children }) {
       if (!error && data?.role) {
         return data.role.toLowerCase();
       }
-    } catch (e) {
-      console.log('No profiles table named profiles or query failed:', e);
+    } catch {
+      // Silent fail — table may not exist yet, not a security concern
     }
 
-    return 'cliente'; // Default low-level user role
+    return 'cliente'; // Default lowest-privilege role
   };
 
   // Auth session listener

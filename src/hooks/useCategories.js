@@ -6,7 +6,7 @@ const DEFAULT_CATEGORIES = ['Maquillaje', 'Manicura', 'Ropa', 'Accesorios', 'Ter
 export function useCategories() {
   const [categoriesList, setCategoriesList] = useState([]); // [{ id, nombre }]
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES); // ['Maquillaje', ...]
-  const [subcategoriesList, setSubcategoriesList] = useState([]); // [{ id, nombre, categoria_id }]
+  const [subcategoriesList, setSubcategoriesList] = useState([]); // [{ id, nombre, categoria_padre }]
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -61,7 +61,8 @@ export function useCategories() {
         const formattedSubs = (subData || []).map((sub) => ({
           id: sub.id,
           nombre: sub.nombre.charAt(0).toUpperCase() + sub.nombre.slice(1),
-          categoria_id: sub.categoria_id
+          // Real DB column is 'categoria_padre' (text with category name), not 'categoria_id'
+          categoria_padre: sub.categoria_padre
         }));
         setSubcategoriesList(formattedSubs);
       }
@@ -169,16 +170,19 @@ export function useCategories() {
   };
 
   // Create subcategory
-  const addSubcategory = async (name, categoryId) => {
+  // categoryPadre: the category NAME (string), matching the real 'categoria_padre' text column
+  const addSubcategory = async (name, categoryPadre) => {
     try {
       const cleanName = name.trim();
-      if (!cleanName || !categoryId) return;
+      if (!cleanName || !categoryPadre) return;
 
       const capitalized = cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
 
+      // Use 'categoria_padre' (text) — the actual column name in the DB.
+      // The old code used 'categoria_id' (uuid) which does not exist in this schema.
       const { error: insertErr } = await supabase
         .from('subcategorias')
-        .insert([{ nombre: capitalized, categoria_id: categoryId }]);
+        .insert([{ nombre: capitalized, categoria_padre: categoryPadre }]);
 
       if (insertErr) throw insertErr;
 

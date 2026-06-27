@@ -1,6 +1,22 @@
 import { supabase } from './supabaseClient';
 
 /**
+ * Escapes HTML special characters to prevent XSS / HTML injection in email templates.
+ * Must be applied to ALL user-controlled values before inserting into HTML strings.
+ * @param {*} text - Value to escape
+ * @returns {string} - Safely escaped string
+ */
+function escapeHtml(text) {
+  if (text === null || text === undefined) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
  * Sends an email notification using the Supabase Edge Function 'send-email'.
  * 
  * @param {Object} params - The parameters for the email
@@ -30,6 +46,8 @@ export async function sendEmailNotification({ to, subject, html }) {
 
 /**
  * Formats a clean HTML email template for order receipts.
+ * V-04 FIX: All user-controlled values are escaped with escapeHtml() before insertion
+ * to prevent HTML injection / XSS in the recipient's email client.
  * 
  * @param {Object} order - The order object
  * @returns {string} - The HTML template
@@ -37,26 +55,30 @@ export async function sendEmailNotification({ to, subject, html }) {
 export function formatOrderEmailHtml(order) {
   const itemsHtml = order.items.map(item => `
     <tr>
-      <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
-      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${item.price.toFixed(2)}</td>
-      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${(item.price * item.quantity).toFixed(2)}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee;">${escapeHtml(item.name)}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${escapeHtml(item.quantity)}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${escapeHtml(Number(item.price).toFixed(2))}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${escapeHtml((Number(item.price) * Number(item.quantity)).toFixed(2))}</td>
     </tr>
   `).join('');
+
+  const couponHtml = order.couponApplied
+    ? `<p style="margin: 4px 0; color: #7c3aed;"><strong>Cupón Aplicado:</strong> ${escapeHtml(order.couponApplied.codigo)} (-$${escapeHtml(Number(order.couponApplied.discountAmount).toFixed(2))})</p>`
+    : '';
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px;">
       <h2 style="color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px;">Detalle del Pedido</h2>
-      <p>Hola, <strong>${order.cliente}</strong>. Tu pedido ha sido registrado con éxito.</p>
+      <p>Hola, <strong>${escapeHtml(order.cliente)}</strong>. Tu pedido ha sido registrado con éxito.</p>
       
       <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin: 20px 0;">
-        <p style="margin: 4px 0;"><strong>ID de Orden:</strong> #${order.id.slice(-6)}</p>
-        <p style="margin: 4px 0;"><strong>Estado actual del pedido:</strong> <span style="text-transform: uppercase; font-weight: bold; color: #16a34a;">${order.estado}</span></p>
-        <p style="margin: 4px 0;"><strong>Teléfono:</strong> ${order.telefono}</p>
-        <p style="margin: 4px 0;"><strong>Método de Envío:</strong> ${order.metodoEnvio === 'envio' ? 'Envío a Domicilio' : 'Retiro en Local'}</p>
-        <p style="margin: 4px 0;"><strong>Dirección:</strong> ${order.direccion}</p>
-        <p style="margin: 4px 0;"><strong>Método de Pago:</strong> ${order.metodoPago.toUpperCase()}</p>
-        ${order.couponApplied ? `<p style="margin: 4px 0; color: #7c3aed;"><strong>Cupón Aplicado:</strong> ${order.couponApplied.codigo} (-$${order.couponApplied.discountAmount.toFixed(2)})</p>` : ''}
+        <p style="margin: 4px 0;"><strong>ID de Orden:</strong> #${escapeHtml(String(order.id).slice(-6))}</p>
+        <p style="margin: 4px 0;"><strong>Estado actual del pedido:</strong> <span style="text-transform: uppercase; font-weight: bold; color: #16a34a;">${escapeHtml(order.estado)}</span></p>
+        <p style="margin: 4px 0;"><strong>Teléfono:</strong> ${escapeHtml(order.telefono)}</p>
+        <p style="margin: 4px 0;"><strong>Método de Envío:</strong> ${escapeHtml(order.metodoEnvio === 'envio' ? 'Envío a Domicilio' : 'Retiro en Local')}</p>
+        <p style="margin: 4px 0;"><strong>Dirección:</strong> ${escapeHtml(order.direccion)}</p>
+        <p style="margin: 4px 0;"><strong>Método de Pago:</strong> ${escapeHtml(order.metodoPago ? order.metodoPago.toUpperCase() : '')}</p>
+        ${couponHtml}
       </div>
 
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
@@ -74,7 +96,7 @@ export function formatOrderEmailHtml(order) {
       </table>
 
       <div style="text-align: right; margin-top: 20px; font-size: 18px; font-weight: bold; color: #16a34a;">
-        Total: $${order.total.toFixed(2)}
+        Total: $${escapeHtml(Number(order.total).toFixed(2))}
       </div>
 
       <p style="font-size: 11px; color: #9ca3af; text-align: center; margin-top: 40px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
