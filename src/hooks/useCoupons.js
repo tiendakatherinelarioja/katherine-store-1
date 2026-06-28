@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabaseClient';
 
-export function useCoupons() {
+export function useCoupons({ enabled = true } = {}) {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,7 +12,7 @@ export function useCoupons() {
       setError(null);
       const { data, error: fetchErr } = await supabase
         .from('cupones')
-        .select('*')
+        .select('id, codigo, tipo, valor, activo, created_at')
         .order('created_at', { ascending: false });
 
       if (fetchErr) throw fetchErr;
@@ -79,7 +79,7 @@ export function useCoupons() {
 
       const { data, error: fetchErr } = await supabase
         .from('cupones')
-        .select('*')
+        .select('id, codigo, tipo, valor')
         .eq('codigo', cleanCode)
         .eq('activo', true)
         .maybeSingle();
@@ -98,8 +98,10 @@ export function useCoupons() {
   };
 
   useEffect(() => {
-    fetchCoupons();
-  }, [fetchCoupons]);
+    if (enabled) {
+      fetchCoupons();
+    }
+  }, [fetchCoupons, enabled]);
 
   return {
     coupons,

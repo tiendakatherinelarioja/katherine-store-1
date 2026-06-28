@@ -16,7 +16,7 @@ import Badge from './components/ui/Badge';
 
 // Views - Static for the initial landing view to render instantly
 import Home from './views/client/Home';
-import UnderConstruction from './components/ui/UnderConstruction';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Views - Lazy-loaded on-demand as the user navigates
@@ -71,12 +71,7 @@ function AppContent() {
     }
   };
 
-  const isMaintenanceActive = !checkingAuth && userRole !== 'admin' && userRole !== 'superadmin';
-  const showUnderConstruction = isMaintenanceActive && view !== 'login';
 
-  if (showUnderConstruction) {
-    return <UnderConstruction onAdminLogin={() => setView('login')} />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

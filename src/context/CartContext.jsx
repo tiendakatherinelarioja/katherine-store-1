@@ -35,8 +35,9 @@ export function CartProvider({ children }) {
   const resolveUserRole = async (currentUser) => {
     if (!currentUser) return null;
     
-    // 1. ONLY check app_metadata — this field can only be modified via service_role (backend)
+    // 1. ONLY check app_metadata — this field can only be modified via service_role (backend).
     //    user_metadata is intentionally excluded: it is writable by the user themselves.
+    //    Early return here avoids all DB queries for users with a role set in app_metadata (normal prod case).
     const role = currentUser.app_metadata?.role ||
                  currentUser.app_metadata?.rol;
                

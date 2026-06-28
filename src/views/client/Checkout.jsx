@@ -11,7 +11,8 @@ const ADMIN_WHATSAPP = '5493804918672';
 export default function Checkout() {
   const { cart, cartTotal, setView, user, setIsAuthModalOpen, setAuthModalTab } = useCart();
   const { checkoutAsGuest, loading: checkoutLoading } = useOrders();
-  const { validateCoupon } = useCoupons();
+  // enabled: false — only validateCoupon is needed here (called on demand), not the full list
+  const { validateCoupon } = useCoupons({ enabled: false });
 
   const [formData, setFormData] = useState({
     nombre: '',

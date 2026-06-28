@@ -3,7 +3,6 @@ import { useCart } from '../../context/CartContext';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
 import ProductCard from '../../components/product/ProductCard';
 import { ChevronRight, Megaphone, Tag, Award } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // New Home Components
@@ -34,31 +33,9 @@ export default function Home({ products }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Fetch sales counts for dynamic Best Sellers (Destacados)
-  const [salesCounts, setSalesCounts] = useState({});
-
-  useEffect(() => {
-    const fetchSalesCounts = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('detalles_pedido')
-          .select('producto_id, cantidad');
-        if (!error && data) {
-          const counts = {};
-          data.forEach((row) => {
-            const pId = row.producto_id;
-            counts[pId] = (counts[pId] || 0) + (row.cantidad || 0);
-          });
-          setSalesCounts(counts);
-        }
-      } catch (err) {
-        console.error('Error fetching sales counts:', err);
-      }
-    };
-    fetchSalesCounts();
-  }, []);
-
   // Filter products for Promotions & Featured
+  // Optimization: Uses the 'relevante' field already included in the products query.
+  // Previously this section fetched the entire 'detalles_pedido' table on every Home visit.
   const promoProducts = React.useMemo(() => {
     const list = products.filter((p) => p.stock > 0 && p.activo !== false && p.relevante === true);
     if (list.length > 0) return list;
@@ -76,17 +53,19 @@ export default function Home({ products }) {
     return products.filter((p) => p.stock > 0 && p.activo !== false).slice(0, 4);
   }, [products]);
 
+  // Más Vendidos: products marked as 'relevante' take priority, then by stock availability.
+  // No extra Supabase query needed — 'relevante' is already part of the products payload.
   const featuredProducts = React.useMemo(() => {
     return [...products]
       .filter((p) => p.stock > 0 && p.activo !== false)
       .sort((a, b) => {
-        const salesA = salesCounts[a.id] || 0;
-        const salesB = salesCounts[b.id] || 0;
-        if (salesB !== salesA) return salesB - salesA;
-        return b.rating - a.rating;
+        // Prioritize products marked as relevant/featured
+        if (b.relevante !== a.relevante) return (b.relevante ? 1 : 0) - (a.relevante ? 1 : 0);
+        // Secondary: by stock quantity as a popularity proxy
+        return b.stock - a.stock;
       })
       .slice(0, 4);
-  }, [products, salesCounts]);
+  }, [products]);
 
   const gridVariants = {
     hidden: { opacity: 0 },

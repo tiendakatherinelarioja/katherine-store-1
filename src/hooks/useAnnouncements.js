@@ -36,7 +36,7 @@ export function useAnnouncements() {
       // Attempt to query Supabase announcements table
       const { data, error: fetchErr } = await supabase
         .from('anuncios')
-        .select('*')
+        .select('id, texto, link, activo')
         .order('id', { ascending: true });
 
       if (fetchErr) {

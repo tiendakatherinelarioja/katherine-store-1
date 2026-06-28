@@ -17,7 +17,7 @@ export function useCategories() {
 
       const { data, error: fetchErr } = await supabase
         .from('categorias')
-        .select('*')
+        .select('id, nombre')
         .order('nombre', { ascending: true });
 
       if (fetchErr) {
@@ -47,7 +47,7 @@ export function useCategories() {
       // Fetch subcategories
       const { data: subData, error: subErr } = await supabase
         .from('subcategorias')
-        .select('*')
+        .select('id, nombre, categoria_padre')
         .order('nombre', { ascending: true });
 
       if (subErr) {
@@ -91,13 +91,22 @@ export function useCategories() {
       // Capitalize first letter to save nicely
       const capitalized = cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
 
-      const { error: insertErr } = await supabase
+      const { data: insertedData, error: insertErr } = await supabase
         .from('categorias')
-        .insert([{ nombre: capitalized }]);
+        .insert([{ nombre: capitalized }])
+        .select('id, nombre')
+        .single();
 
       if (insertErr) throw insertErr;
 
-      await fetchCategories();
+      // Optimistic local update — no refetch needed
+      if (insertedData) {
+        const newItem = { id: insertedData.id, nombre: insertedData.nombre };
+        setCategoriesList((prev) => [...prev, newItem].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        setCategories((prev) => [...prev, insertedData.nombre].sort());
+      } else {
+        await fetchCategories();
+      }
     } catch (err) {
       console.error('Error al agregar categoría:', err);
       alert('Error en base de datos al guardar categoría: ' + err.message);
@@ -180,13 +189,21 @@ export function useCategories() {
 
       // Use 'categoria_padre' (text) — the actual column name in the DB.
       // The old code used 'categoria_id' (uuid) which does not exist in this schema.
-      const { error: insertErr } = await supabase
+      const { data: insertedSub, error: insertErr } = await supabase
         .from('subcategorias')
-        .insert([{ nombre: capitalized, categoria_padre: categoryPadre }]);
+        .insert([{ nombre: capitalized, categoria_padre: categoryPadre }])
+        .select('id, nombre, categoria_padre')
+        .single();
 
       if (insertErr) throw insertErr;
 
-      await fetchCategories();
+      // Optimistic local update — no refetch needed
+      if (insertedSub) {
+        const newSub = { id: insertedSub.id, nombre: insertedSub.nombre, categoria_padre: insertedSub.categoria_padre };
+        setSubcategoriesList((prev) => [...prev, newSub].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      } else {
+        await fetchCategories();
+      }
     } catch (err) {
       console.error('Error al agregar subcategoría:', err);
       alert('Error en base de datos al guardar subcategoría: ' + err.message);

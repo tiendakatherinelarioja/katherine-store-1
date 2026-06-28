@@ -19,7 +19,10 @@ export function useOrders({ subscribeRealtime = false } = {}) {
       price: parseFloat(d.precio_unitario)
     }));
     
-    const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // Use server-computed total from the view to avoid recalculation
+    const total = o.total !== undefined
+      ? parseFloat(o.total)
+      : items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     return {
       id: o.id,
@@ -40,9 +43,10 @@ export function useOrders({ subscribeRealtime = false } = {}) {
     try {
       setLoading(true);
       setError(null);
+      // Select only the columns that exist in vista_pedidos_completos
       const { data, error: fetchErr } = await supabase
         .from('vista_pedidos_completos')
-        .select('*')
+        .select('id, cliente_nombre, cliente_telefono, cliente_email, direccion_fisica, metodo_pago, metodo_envio, estado, total, created_at, items')
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -216,10 +220,10 @@ export function useOrders({ subscribeRealtime = false } = {}) {
           console.log('Realtime update received:', payload);
           
           if (payload.eventType === 'INSERT') {
-            // Fetch complete order joins with details
+            // Fetch complete order joins with details (specific columns only)
             const { data, error: fetchErr } = await supabase
               .from('vista_pedidos_completos')
-              .select('*')
+              .select('id, cliente_nombre, cliente_telefono, cliente_email, direccion_fisica, metodo_pago, metodo_envio, estado, total, created_at, items')
               .eq('id', payload.new.id)
               .single();
 
