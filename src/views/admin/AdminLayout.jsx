@@ -88,10 +88,12 @@ export default function AdminLayout({
         <div className="flex items-center gap-1.5">
           {!logoError ? (
             <img 
-              src="/logo.png" 
+              src="/logo.webp" 
               alt="Logo" 
               onError={() => setLogoError(true)} 
               className="h-6 w-auto object-contain"
+              width="370"
+              height="56"
             />
           ) : (
             <>
@@ -115,10 +117,12 @@ export default function AdminLayout({
             <div className="flex items-center gap-2">
               {!logoError ? (
                 <img 
-                  src="/logo.png" 
+                  src="/logo.webp" 
                   alt="Logo" 
                   onError={() => setLogoError(true)} 
                   className="h-8 w-auto object-contain"
+                  width="370"
+                  height="56"
                 />
               ) : (
                 <>

@@ -42,7 +42,7 @@ export default function OrdersPanel() {
         <body>
           <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
             <div class="logo">
-              <img src="${window.location.origin}/logo.png" style="height: 32px; object-fit: contain; vertical-align: middle;" onerror="this.style.display='none'; this.nextSibling.style.display='inline-block';" /><span style="display: none;">● Katherine</span>
+              <img src="${window.location.origin}/logo.webp" style="height: 32px; object-fit: contain; vertical-align: middle;" onerror="this.style.display='none'; this.nextSibling.style.display='inline-block';" /><span style="display: none;">● Katherine</span>
             </div>
             <span class="title">REMITO DE PEDIDO</span>
           </div>

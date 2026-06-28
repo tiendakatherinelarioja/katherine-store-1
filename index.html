@@ -2,10 +2,29 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Katherine Store</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Katherine Store — Maquillaje, Manicura y Accesorios</title>
+  <meta name="description" content="Descubrí nuestra tienda online de maquillaje, manicura, ropa y accesorios. Comprá fácil y rápido con envío o retiro en local." />
+
+  <!-- Preconnect para reducir latencia DNS/TLS de Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Fuentes: carga asíncrona (no-bloqueante). media=print→all es la técnica estándar para evitar render-blocking.
+       Poppins reducido a 4 pesos (400,500,600,700) — elimina 3 archivos woff2 innecesarios. -->
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" />
+  </noscript>
+
+  <!-- Preload del logo para que el browser lo descargue antes de parsear el HTML -->
+  <link rel="preload" as="image" href="/logo.webp" type="image/webp" />
   </head>
   <body class="bg-white">
     <div id="root"></div>

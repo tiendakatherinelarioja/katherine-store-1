@@ -60,11 +60,14 @@ export default function Navbar({ onCartOpen }) {
             onClick={() => { setView('home'); setMobileMenuOpen(false); }}
           >
             {!logoError ? (
-              <img
-                src="/logo.png"
+            <img
+                src="/logo.webp"
                 alt="Katherine"
                 onError={() => setLogoError(true)}
                 className="h-7 lg:h-8 w-auto object-contain"
+                width="370"
+                height="56"
+                fetchpriority="high"
               />
             ) : (
               <span className="text-xl font-jakarta font-medium text-charcoal tracking-tight flex items-center gap-2">

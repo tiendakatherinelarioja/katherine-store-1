@@ -53,6 +53,7 @@ export default function HeroSection({ onExplore }) {
           animate="visible"
           className="max-w-xl text-center lg:text-left"
         >
+          {/* Badge */}
           <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8 justify-center lg:justify-start">
             <div className="w-10 h-[1px] bg-taupe" />
             <Sparkles className="w-4 h-4 text-gold" />
@@ -60,12 +61,13 @@ export default function HeroSection({ onExplore }) {
               Nuestras selecciones para vos
             </span>
           </motion.div>
-          
-          <motion.h1 variants={itemVariants} className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-jakarta font-medium text-charcoal leading-[0.85] tracking-tighter mb-10">
+
+          {/* H1 — LCP element: rendered immediately visible, no entrance animation */}
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-jakarta font-medium text-charcoal leading-[0.85] tracking-tighter mb-10">
             Conoce <br />
             <span className="italic font-light text-taupe">nuestros </span> Productos.
-          </motion.h1>
-          
+          </h1>
+
           <motion.p variants={itemVariants} className="text-lg text-gray-500 font-sans leading-relaxed mb-12 max-w-sm">
             Explora por nuestro catalogo la variedad de productos para vos o tu emprendimiento!.
           </motion.p>

@@ -28,9 +28,12 @@ export default function Footer() {
               className="flex items-center hover:opacity-70 transition-opacity focus:outline-none w-fit"
             >
               <img
-                src="/logo.png"
+                src="/logo.webp"
                 alt="Katherine"
                 className="h-8 w-auto object-contain"
+                width="370"
+                height="56"
+                loading="lazy"
               />
             </button>
 
